@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
 import { User } from "../firebase/users";
 import { createModule } from "../firebase/modules";
-
+import { useUserStore } from '@/store/userStore';
 
 interface CardData {
   term: string;
@@ -21,7 +21,7 @@ function CreateModule() {
 
   const [description, setDescription] = useState<string>("");
   const [descriptionError, setDescriptionError] = useState<string>("");
-
+  const { username, email, photoURL } = useUserStore();
   const [cards, setCards] = useState<CardData[]>([
     { term: "", definition: "", imageUrl: "" },
   ]);
@@ -61,10 +61,10 @@ function CreateModule() {
 
     if (isError) return;
 
-    const mockAuthor: User = {
-      email: "test@example.com",
-      username: "TestUser",
-      photoURL: "",
+    const author: User = {
+      email: email ?? "",       
+      username: username ?? "",
+      photoURL: photoURL ?? "",
       bannerURL: "",
       createdAt: ""
     };
@@ -74,10 +74,14 @@ function CreateModule() {
       title,
       description,
       cards,
-      mockAuthor
+      author
     );
-
-    console.log("✅ Module created:", { title, description, cards });
+    setTitle("");
+    setDescription("");
+    setCards([{ term: "", definition: "", imageUrl: "" }]);
+    //add notif
+    alert("Module created")
+    console.log("Module created:", { title, description, cards });
   };
 
   return (

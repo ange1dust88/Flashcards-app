@@ -1,51 +1,73 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from '../firebase/config'
 
 import { useRouter } from "next/navigation";
 import { collection, doc, getDoc, getDocs, onSnapshot } from 'firebase/firestore';
 import { useUserStore } from '@/store/userStore';
-
+import { getAllModules } from '../firebase/modules'; 
+import ModuleCard from '@/components/ui/module-card';
 
 
 
 function Dashboard() {
   const [authUser, loading] = useAuthState(auth);
   const setUser = useUserStore((state) => state.setUser);
+  const [modules, setModules] = useState<any[]>([]); 
   const router = useRouter();
 
   useEffect(() => {
     if (!authUser) return;
 
+
     const ref = doc(db, "users", authUser.uid);
     const unsubscribe = onSnapshot(ref, (snap) => {
       if (snap.exists()) {
         setUser(snap.data()); 
-        console.log(snap.data());
-      }else{
-        console.log("no snap:(");
+        console.log("User data:", snap.data());
+      } else {
+        console.log("No user snapshot :(");
       }
     }, (err) => {
       console.error("Failed to listen user data:", err);
     });
 
+    getAllModules()
+      .then(modules => {
+        setModules(modules);
+        console.log("All modules:", modules);
+      })
+      .catch(err => {
+        console.error("Failed to fetch modules:", err);
+      });
+
     return () => unsubscribe(); 
   }, [authUser, setUser]);
 
-
-
-  if (loading) return <div>Loading...</div>;
-
-
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className='flex h-screen justify-center items-center'>
-      <div className="bg-neutral-950 w-full h-full container">
-        DASHBOARD
+    <div className='flex h-screen justify-center items-start'>
+      <div className="container mt-16">
+
+        <div className='flex gap-6 w-full'>
+          {modules.map((mod) => (
+            <ModuleCard
+              key={mod.id}
+              title={mod.title}
+              author={mod.author.username} 
+              imageUrl={mod.imageUrl ?? ""} 
+              length={mod.wordList.length}
+            />
+          ))}
+        </div>
+
       </div>
 
     {/**
