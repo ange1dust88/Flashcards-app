@@ -1,10 +1,8 @@
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/ui/Header";
 import Sidebar from "@/components/ui/sidebar";
-
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +30,19 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Header />
-        <Sidebar/>
+        <Sidebar />
         {children}
       </body>
     </html>
   );
 }
+
+// server side pages
+// take images
+// header reloading fix
+// show modules in user's profile
+// like another modules and save to lib
+
+// learning modes
+// openai api add to modules
+// spinner

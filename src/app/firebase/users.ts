@@ -1,7 +1,13 @@
-
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "./config";
-
 
 export interface User {
   email: string;
@@ -26,4 +32,26 @@ export async function createUser(
     createdAt: serverTimestamp(),
   });
   console.log("User created in Firestore:", uid);
+}
+
+export async function getUserByUsername(
+  username: string
+): Promise<User | null> {
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", username));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      console.log("No user found with username:", username);
+      return null;
+    }
+
+    // Предположим, username уникален → берем первый документ
+    const userData = snapshot.docs[0].data() as User;
+    return userData;
+  } catch (error) {
+    console.error("Error fetching user by username:", error);
+    return null;
+  }
 }

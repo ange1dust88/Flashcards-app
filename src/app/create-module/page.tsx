@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import CreateCard from "@/components/ui/create-card";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState } from "react";
 import { User } from "../firebase/users";
 import { createModule } from "../firebase/modules";
-import { useUserStore } from '@/store/userStore';
+import { useUserStore } from "@/store/userStore";
 
 interface CardData {
   term: string;
@@ -32,9 +32,7 @@ function CreateModule() {
     value: string
   ) => {
     setCards((prev) =>
-      prev.map((card, i) =>
-        i === index ? { ...card, [field]: value } : card
-      )
+      prev.map((card, i) => (i === index ? { ...card, [field]: value } : card))
     );
   };
 
@@ -62,83 +60,75 @@ function CreateModule() {
     if (isError) return;
 
     const author: User = {
-      email: email ?? "",       
+      email: email ?? "",
       username: username ?? "",
       photoURL: photoURL ?? "",
       bannerURL: "",
-      createdAt: ""
+      createdAt: "",
     };
 
-    await createModule(
-      crypto.randomUUID(), 
-      title,
-      description,
-      cards,
-      author
-    );
+    await createModule(crypto.randomUUID(), title, description, cards, author);
     setTitle("");
     setDescription("");
     setCards([{ term: "", definition: "", imageUrl: "" }]);
     //add notif
-    alert("Module created")
+    alert("Module created");
     console.log("Module created:", { title, description, cards });
   };
 
   return (
-    <div className="flex h-screen justify-center items-center">
+    <div className="flex h-screen justify-center items-start mt-16">
       <div className="bg-neutral-950 container">
-        <div className="p-4">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-bold">Create a new flashcard set</h2>
-            <div className="flex gap-2">
-              <Button variant={"secondary"} onClick={handleCreate}>
-                Create
-              </Button>
-              <Button>Create and practice</Button>
-            </div>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-xl font-bold">Create a new flashcard set</h2>
+          <div className="flex gap-2">
+            <Button variant={"secondary"} onClick={handleCreate}>
+              Create
+            </Button>
+            <Button>Create and practice</Button>
           </div>
+        </div>
 
-          {/* Title & Description */}
-          <div className="flex flex-col gap-1">
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
+        {/* Title & Description */}
+        <div className="flex flex-col gap-1">
+          <Input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title"
+          />
+          {titleError && (
+            <span className="text-red-500 text-sm">{titleError}</span>
+          )}
+
+          <Textarea
+            placeholder="Add a description..."
+            className="resize-none"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          {descriptionError && (
+            <span className="text-red-500 text-sm">{descriptionError}</span>
+          )}
+        </div>
+
+        {/* Flashcards */}
+        <div className="mt-8 flex flex-col gap-4">
+          {cards.map((card, i) => (
+            <CreateCard
+              key={i}
+              index={i + 1}
+              term={card.term}
+              definition={card.definition}
+              imageUrl={card.imageUrl}
+              onChange={(field, value) => handleCardChange(i, field, value)}
             />
-            {titleError && (
-              <span className="text-red-500 text-sm">{titleError}</span>
-            )}
+          ))}
+        </div>
 
-            <Textarea
-              placeholder="Add a description..."
-              className="resize-none"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            {descriptionError && (
-              <span className="text-red-500 text-sm">{descriptionError}</span>
-            )}
-          </div>
-
-          {/* Flashcards */}
-          <div className="mt-8 flex flex-col gap-4">
-            {cards.map((card, i) => (
-              <CreateCard
-                key={i}
-                index={i + 1}
-                term={card.term}
-                definition={card.definition}
-                imageUrl={card.imageUrl}
-                onChange={(field, value) => handleCardChange(i, field, value)}
-              />
-            ))}
-          </div>
-
-          <div className="text-center mt-10">
-            <Button onClick={addCard}>Add a card</Button>
-          </div>
+        <div className="text-center mt-10">
+          <Button onClick={addCard}>Add a card</Button>
         </div>
       </div>
     </div>

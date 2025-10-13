@@ -1,4 +1,11 @@
-import { doc, setDoc, serverTimestamp, collection, getDocs } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  getDocs,
+  getDoc,
+} from "firebase/firestore";
 import { db } from "./config";
 import { User } from "./users";
 
@@ -27,17 +34,16 @@ export async function createModule(
   author: User,
   imageUrl?: string
 ): Promise<void> {
-
   const cleanedWordList = wordList.map((word) => ({
     ...word,
-    imageUrl: word.imageUrl ?? "", 
+    imageUrl: word.imageUrl ?? "",
   }));
 
   const moduleData: Module = {
     id: moduleId,
     title,
     description,
-    imageUrl: imageUrl ?? "", 
+    imageUrl: imageUrl ?? "",
     wordList: cleanedWordList,
     author,
     createdAt: serverTimestamp(),
@@ -49,13 +55,12 @@ export async function createModule(
   console.log("Module created in Firestore:", moduleId);
 }
 
-
 export async function getAllModules(): Promise<Module[]> {
   try {
     const modulesCollection = collection(db, "modules");
     const snapshot = await getDocs(modulesCollection);
 
-    const modules: Module[] = snapshot.docs.map(doc => {
+    const modules: Module[] = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -76,4 +81,32 @@ export async function getAllModules(): Promise<Module[]> {
   }
 }
 
+export async function getModuleById(moduleId: string): Promise<Module | null> {
+  try {
+    const moduleRef = doc(db, "modules", moduleId);
+    const moduleSnap = await getDoc(moduleRef);
 
+    if (!moduleSnap.exists()) {
+      console.warn(`Module with id "${moduleId}" not found`);
+      return null;
+    }
+
+    const data = moduleSnap.data();
+
+    const moduleData: Module = {
+      id: moduleSnap.id,
+      title: data.title,
+      description: data.description,
+      imageUrl: data.imageUrl ?? "",
+      wordList: data.wordList ?? [],
+      author: data.author,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+
+    return moduleData;
+  } catch (error) {
+    console.error("Error fetching module by id:", error);
+    return null;
+  }
+}
