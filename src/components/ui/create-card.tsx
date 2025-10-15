@@ -20,6 +20,7 @@ function CreateCard({
 }: CreateCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,7 +48,7 @@ function CreateCard({
       </div>
 
       {/* Inputs */}
-      <div className="grid grid-cols-[43%_43%_10%] gap-[2%]">
+      <div className="grid grid-cols-[3fr_3fr_1fr] gap-8">
         <Input
           placeholder="Enter term"
           value={term}
@@ -114,7 +115,7 @@ function CreateCard({
       </div>
 
       {/* Labels */}
-      <div className="grid grid-cols-[43%_43%_10%] gap-[2%] text-neutral-400 text-sm mt-1">
+      <div className="grid grid-cols-[3fr_3fr_1fr] gap-8 text-neutral-400 text-sm mt-1">
         <span>TERM</span>
         <span>DEFINITION</span>
       </div>

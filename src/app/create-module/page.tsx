@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import CreateCard from "@/components/ui/create-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { User } from "../firebase/users";
 import { createModule } from "../firebase/modules";
 import { useUserStore } from "@/store/userStore";
+import { uploadToCloudinary } from "../firebase/uploadToCloudinary";
 
 interface CardData {
   term: string;
@@ -25,6 +26,9 @@ function CreateModule() {
   const [cards, setCards] = useState<CardData[]>([
     { term: "", definition: "", imageUrl: "" },
   ]);
+  const [coverImage, setCoverImage] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleCardChange = (
     index: number,
@@ -67,10 +71,19 @@ function CreateModule() {
       createdAt: "",
     };
 
-    await createModule(crypto.randomUUID(), title, description, cards, author);
+    await createModule(
+      crypto.randomUUID(),
+      title,
+      description,
+      cards,
+      author,
+      coverImage
+    );
+
     setTitle("");
     setDescription("");
     setCards([{ term: "", definition: "", imageUrl: "" }]);
+    setCoverImage("");
     //add notif
     alert("Module created");
     console.log("Module created:", { title, description, cards });
@@ -90,27 +103,67 @@ function CreateModule() {
           </div>
         </div>
 
-        {/* Title & Description */}
-        <div className="flex flex-col gap-1">
-          <Input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-          />
-          {titleError && (
-            <span className="text-red-500 text-sm">{titleError}</span>
-          )}
+        {/* Title & Description & cover image */}
+        <div className="grid grid-cols-[minmax(0,5fr)_1fr] gap-8">
+          <div className=" flex flex-col gap-1">
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title"
+            />
+            {titleError && (
+              <span className="text-red-500 text-sm">{titleError}</span>
+            )}
 
-          <Textarea
-            placeholder="Add a description..."
-            className="resize-none"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          {descriptionError && (
-            <span className="text-red-500 text-sm">{descriptionError}</span>
-          )}
+            <Textarea
+              placeholder="Add a description..."
+              className="resize-none h-full"
+              value={description}
+              maxLength={200}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            {descriptionError && (
+              <span className="text-red-500 text-sm">{descriptionError}</span>
+            )}
+          </div>
+
+          {/* Cover image upload */}
+          <div
+            className="rounded-lg border border-neutral-800 overflow-hidden bg-neutral-900 flex justify-center items-center p-2 aspect-square cursor-pointer relative group"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <img
+              src={coverImage || "/exampleImage.jpg"}
+              alt="cover"
+              className="w-full h-full object-cover rounded-lg group-hover:opacity-75 transition-opacity"
+            />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 rounded-lg transition-opacity">
+              <span className="text-sm text-white">
+                {uploading ? "Uploading..." : "Change"}
+              </span>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                try {
+                  const url = await uploadToCloudinary(file);
+                  setCoverImage(url);
+                } catch (err) {
+                  console.error("Cover upload failed:", err);
+                  alert("Cover upload failed");
+                } finally {
+                  setUploading(false);
+                }
+              }}
+            />
+          </div>
         </div>
 
         {/* Flashcards */}

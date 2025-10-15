@@ -37,12 +37,13 @@ export default function RootLayout({
   );
 }
 
-// server side pages
-// take images
-// header reloading fix
 // show modules in user's profile
+// update profile
+// update module
+
 // like another modules and save to lib
 
+// header reloading fix
 // learning modes
 // openai api add to modules
 // spinner

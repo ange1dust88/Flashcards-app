@@ -10,18 +10,26 @@ interface ModuleCardTypes {
   //createdAt: string;
   //id: slug;
 }
-function ModuleCard({ title, author, length, id }: ModuleCardTypes) {
+function ModuleCard({ title, author, length, id, imageUrl }: ModuleCardTypes) {
   return (
     <Link
       href={`/modules/${id}`}
       className="flex flex-col rounded-xl border-neutral-800 border bg-neutral-900 hover:bg-neutral-800 transition-colors duration-300 p-2 "
     >
       <div className="cursor-pointer rounded-xl overflow-hidden h-40 w-40">
-        <img
-          src="/exampleImage.jpg"
-          alt={title}
-          className="h-full w-full object-cover"
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <img
+            src="/exampleImage.jpg"
+            alt={title}
+            className="h-full w-full object-cover"
+          />
+        )}
       </div>
       <div className="flex flex-col items-start">
         <h4 className="pt-1 font-semibold">{title}</h4>

@@ -4,6 +4,8 @@ import {
   serverTimestamp,
   collection,
   getDocs,
+  query,
+  where,
   getDoc,
 } from "firebase/firestore";
 import { db } from "./config";
@@ -108,5 +110,34 @@ export async function getModuleById(moduleId: string): Promise<Module | null> {
   } catch (error) {
     console.error("Error fetching module by id:", error);
     return null;
+  }
+}
+
+export async function getModulesByUsername(
+  username: string
+): Promise<Module[]> {
+  try {
+    const modulesRef = collection(db, "modules");
+    const q = query(modulesRef, where("author.username", "==", username));
+    const snapshot = await getDocs(q);
+
+    const modules: Module[] = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        description: data.description,
+        imageUrl: data.imageUrl ?? "",
+        wordList: data.wordList ?? [],
+        author: data.author,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      } as Module;
+    });
+
+    return modules;
+  } catch (error) {
+    console.error("Error fetching modules by username:", error);
+    return [];
   }
 }

@@ -1,18 +1,20 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type UserState = {
-  email: string | null
-  username: string | null
-  photoURL: string | null
-  bannerURL: string | null
-  createdAt: string | null
-}
+  email: string | null;
+  username: string | null;
+  photoURL: string | null;
+  bannerURL: string | null;
+  createdAt: string | null;
+};
 
 type UserActions = {
-  setUser: (user: Partial<UserState>) => void
-  clearUser: () => void
-}
+  setUser: (user: Partial<UserState>) => void;
+  setPhotoURL: (url: string) => void;
+  setBannerURL: (url: string) => void;
+  clearUser: () => void;
+};
 
 export const useUserStore = create<UserState & UserActions>()(
   persist(
@@ -29,6 +31,18 @@ export const useUserStore = create<UserState & UserActions>()(
           ...user,
         })),
 
+      setPhotoURL: (url: string) =>
+        set((state) => ({
+          ...state,
+          photoURL: url,
+        })),
+
+      setBannerURL: (url: string) =>
+        set((state) => ({
+          ...state,
+          bannerURL: url,
+        })),
+
       clearUser: () =>
         set({
           email: null,
@@ -39,7 +53,7 @@ export const useUserStore = create<UserState & UserActions>()(
         }),
     }),
     {
-      name: 'user-storage', 
+      name: "user-storage",
     }
   )
-)
+);

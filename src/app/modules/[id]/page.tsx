@@ -8,12 +8,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import AuthorCard from "@/components/ui/author-card";
+
 interface ModulePageProps {
   params: { id: string };
 }
-
-export default async function ModulePage({ params }: ModulePageProps) {
-  const { id } = params;
+export default async function ModulePage(props: ModulePageProps) {
+  const { id } = await props.params;
 
   const module = await getModuleById(id);
 
@@ -28,12 +28,12 @@ export default async function ModulePage({ params }: ModulePageProps) {
   return (
     <div className="min-h-screen bg-neutral text-white flex justify-center items-start">
       <div className="container">
-        <div className="grid grid-cols-[7fr_3fr] gap-8">
+        <div className="grid grid-cols-[minmax(0,5fr)_1fr] gap-8">
           {/* module info */}
-          <div className="bg-neutral-900 p-4 mt-8 border border-neutral-800 rounded-lg w-full flex gap-6 ">
-            <div className="h-56 w-56 overflow-hidden rounded-lg">
+          <div className=" bg-neutral-900 p-4 mt-8 border border-neutral-800 rounded-lg w-full flex gap-6 ">
+            <div className="flex-shrink-0 h-56 w-56 overflow-hidden rounded-lg">
               <img
-                src="/exampleImage.jpg"
+                src={module.imageUrl || "/exampleImage.jpg"}
                 alt={module.title}
                 className="h-full w-full object-cover"
               />
@@ -41,7 +41,9 @@ export default async function ModulePage({ params }: ModulePageProps) {
 
             <div>
               <h1 className="text-3xl font-semibold">{module.title}</h1>
-              <p className="text-neutral-400">{module.description}</p>
+              <p className="text-neutral-400 break-words break-all">
+                {module.description}
+              </p>
             </div>
           </div>
 
@@ -57,6 +59,7 @@ export default async function ModulePage({ params }: ModulePageProps) {
                   key={i}
                   term={word.term}
                   definition={word.definition}
+                  imageUrl={word.imageUrl}
                 />
               </CarouselItem>
             ))}

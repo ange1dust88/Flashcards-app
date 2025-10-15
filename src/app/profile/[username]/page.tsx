@@ -1,72 +1,60 @@
-"use client";
-import React, { use, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { getUserByUsername, User } from "@/app/firebase/users";
-import { Spinner } from "@/components/ui/spinner";
+import { getUserByUsername } from "@/app/firebase/users";
+import { getModulesByUsername } from "@/app/firebase/modules";
+import { notFound } from "next/navigation";
+import ModulesFilter from "@/components/ui/modules-filter";
+import { serializeFirestoreData } from "@/lib/serialize";
 
 interface UserPageProps {
   params: Promise<{ username: string }>;
 }
+export default async function UserProfile({ params }: UserPageProps) {
+  const { username } = await params;
 
-export default function MyProfile({ params }: UserPageProps) {
-  const { username } = use(params);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUser() {
-      const data = await getUserByUsername(username);
-      setUser(data);
-      setLoading(false);
-    }
-    fetchUser();
-  }, [username]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen text-white">
-        <Spinner />
-      </div>
-    );
-  }
-
+  const user = await getUserByUsername(username);
   if (!user) {
-    return (
-      <div className="flex justify-center items-center h-screen text-white">
-        User not found 😢
-      </div>
-    );
+    notFound();
   }
+
+  const createdModules = await getModulesByUsername(username);
+  const savedModules = await getModulesByUsername(username);
 
   return (
-    <div className="flex justify-center items-start mt-8 h-screen">
-      <div className="container text-white grid grid-cols-[30fr_70fr] gap-2">
-        {/* left */}
-        <div>
-          <Card className="flex flex-col justify-center items-center gap-1 h-64 border border-neutral-800">
+    <div className="flex justify-center items-start mt-8 min-h-screen">
+      <div className="container ">
+        <div className="grid grid-cols-[2fr_4fr] gap-2">
+          {/* LEFT */}
+          <div>
+            <Card className="flex flex-col justify-center items-center gap-1 h-64 border border-neutral-800 p-4">
+              <img
+                className="h-32 w-32 rounded-full mb-2 object-cover"
+                src={user.photoURL || "/exampleImage.jpg"}
+                alt="user avatar"
+              />
+              <p className="text-2xl font-semibold">{user.username}</p>
+              <p className="text-neutral-400">
+                Registration date:{" "}
+                {user.createdAt?.toDate
+                  ? user.createdAt.toDate().toLocaleDateString()
+                  : "Unknown"}
+              </p>
+            </Card>
+          </div>
+
+          {/* RIGHT */}
+          <div>
             <img
-              className="h-32 w-32 rounded-full mb-2 object-cover"
-              src={user.photoURL || "/exampleImage.jpg"}
-              alt="user avatar"
+              src={user.bannerURL || "/exampleImage.jpg"}
+              alt="banner"
+              className="h-64 rounded-lg w-full object-cover border border-neutral-800 mb-4"
             />
-            <p className="text-2xl font-semibold">{user.username}</p>
-            <p className="text-neutral-400">
-              Registration date:{" "}
-              {user.createdAt?.toDate
-                ? user.createdAt.toDate().toLocaleDateString()
-                : "Unknown"}
-            </p>
-          </Card>
+          </div>
         </div>
 
-        {/* right */}
-        <div>
-          <img
-            src={user.bannerURL || "/exampleImage.jpg"}
-            alt="banner"
-            className="h-64 rounded-xl w-full object-cover border border-neutral-800"
-          />
-        </div>
+        <ModulesFilter
+          createdModules={serializeFirestoreData(createdModules)}
+          savedModules={serializeFirestoreData(savedModules)}
+        />
       </div>
     </div>
   );

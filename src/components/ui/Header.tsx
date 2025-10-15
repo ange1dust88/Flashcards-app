@@ -21,7 +21,7 @@ import { useUserStore } from "@/store/userStore";
 function Header() {
   const router = useRouter();
   const [user] = useAuthState(auth);
-  const { username } = useUserStore();
+  const { username, photoURL } = useUserStore();
 
   const handleLogout = async () => {
     try {
@@ -65,7 +65,7 @@ function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <img
-                  src="/exampleImage.jpg"
+                  src={photoURL || "/exampleImage.jpg"}
                   alt="avatar"
                   className="h-10 w-10 rounded-[50%]"
                 />
@@ -90,7 +90,10 @@ function Header() {
                   </DropdownMenuShortcut>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem className=" px-4 py-2 text-muted-foreground transition-colors hover:text-foreground rounded-none flex justify-between items-center">
+                <DropdownMenuItem
+                  onClick={() => router.push("/settings")}
+                  className=" px-4 py-2 text-muted-foreground transition-colors hover:text-foreground rounded-none flex justify-between items-center"
+                >
                   Profile settings
                   <DropdownMenuShortcut>
                     <svg

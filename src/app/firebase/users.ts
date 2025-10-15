@@ -6,6 +6,7 @@ import {
   query,
   where,
   getDocs,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -47,11 +48,40 @@ export async function getUserByUsername(
       return null;
     }
 
-    // Предположим, username уникален → берем первый документ
     const userData = snapshot.docs[0].data() as User;
     return userData;
   } catch (error) {
     console.error("Error fetching user by username:", error);
     return null;
+  }
+}
+
+export async function updateUserPhoto(
+  uid: string,
+  newPhotoURL: string
+): Promise<void> {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      photoURL: newPhotoURL,
+    });
+    console.log("User photo updated:", uid);
+  } catch (error) {
+    console.error("Error updating user photo:", error);
+  }
+}
+
+export async function updateUserBanner(
+  uid: string,
+  newBannerURL: string
+): Promise<void> {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      bannerURL: newBannerURL,
+    });
+    console.log("User banner updated:", uid);
+  } catch (error) {
+    console.error("Error updating user banner:", error);
   }
 }
