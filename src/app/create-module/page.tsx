@@ -5,10 +5,12 @@ import CreateCard from "@/components/ui/create-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useRef, useState } from "react";
-import { User } from "../firebase/users";
 import { createModule } from "../firebase/modules";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/app/firebase/config";
 import { useUserStore } from "@/store/userStore";
 import { uploadToCloudinary } from "../firebase/uploadToCloudinary";
+import { Spinner } from "@/components/ui/spinner";
 
 interface CardData {
   term: string;
@@ -17,12 +19,13 @@ interface CardData {
 }
 
 function CreateModule() {
+  const [user] = useAuthState(auth);
+  const { username } = useUserStore();
   const [title, setTitle] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
 
   const [description, setDescription] = useState<string>("");
   const [descriptionError, setDescriptionError] = useState<string>("");
-  const { username, email, photoURL } = useUserStore();
   const [cards, setCards] = useState<CardData[]>([
     { term: "", definition: "", imageUrl: "" },
   ]);
@@ -63,20 +66,13 @@ function CreateModule() {
 
     if (isError) return;
 
-    const author: User = {
-      email: email ?? "",
-      username: username ?? "",
-      photoURL: photoURL ?? "",
-      bannerURL: "",
-      createdAt: "",
-    };
-
     await createModule(
       crypto.randomUUID(),
       title,
       description,
       cards,
-      author,
+      username || "",
+      user?.uid || "",
       coverImage
     );
 
@@ -130,7 +126,7 @@ function CreateModule() {
 
           {/* Cover image upload */}
           <div
-            className="rounded-lg border border-neutral-800 overflow-hidden bg-neutral-900 flex justify-center items-center p-2 aspect-square cursor-pointer relative group"
+            className="relative rounded-lg border border-neutral-800 overflow-hidden bg-neutral-900 flex justify-center items-center p-2 aspect-square cursor-pointer relative group"
             onClick={() => fileInputRef.current?.click()}
           >
             <img
@@ -138,11 +134,16 @@ function CreateModule() {
               alt="cover"
               className="w-full h-full object-cover rounded-lg group-hover:opacity-75 transition-opacity"
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 rounded-lg transition-opacity">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 rounded-lg transition-opacity">
               <span className="text-sm text-white">
-                {uploading ? "Uploading..." : "Change"}
+                {uploading ? "" : "Change"}
               </span>
             </div>
+            {uploading && (
+              <div className="absolute inset-0 bg-black/50 flex justify-center items-center">
+                <Spinner />
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"

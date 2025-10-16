@@ -1,10 +1,10 @@
 import React from "react";
 import { getAllModules } from "../firebase/modules";
 import ModuleCard from "@/components/ui/module-card";
+import UserSync from "@/components/UserSync";
 
 async function Dashboard() {
   const modules = await getAllModules();
-
   return (
     <div className="flex h-screen justify-center items-start">
       <div className="container mt-16">
@@ -13,7 +13,7 @@ async function Dashboard() {
             <ModuleCard
               key={mod.id}
               title={mod.title}
-              author={mod.author.username}
+              author={mod.authorUsername}
               imageUrl={mod.imageUrl ?? ""}
               length={mod.wordList.length}
               id={mod.id}
@@ -21,6 +21,7 @@ async function Dashboard() {
           ))}
         </div>
       </div>
+      <UserSync />
     </div>
   );
 }

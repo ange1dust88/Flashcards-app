@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 interface AuthorCardTypes {
   username: string;
-  image?: string;
+  image?: string | null;
 }
 
 function AuthorCard({ username, image }: AuthorCardTypes) {
@@ -18,7 +18,7 @@ function AuthorCard({ username, image }: AuthorCardTypes) {
         {username}
       </span>
       <img
-        src="/exampleImage.jpg"
+        src={image || "/exampleImage.jpg"}
         alt={username}
         className="h-42 w-42 rounded-[50%] flex-shrink-0"
       />

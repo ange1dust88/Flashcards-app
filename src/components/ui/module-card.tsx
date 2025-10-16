@@ -3,7 +3,7 @@ import React from "react";
 
 interface ModuleCardTypes {
   title: string;
-  author: string;
+  author: string | null | undefined;
   imageUrl: string;
   length: number;
   id: string;
@@ -14,9 +14,9 @@ function ModuleCard({ title, author, length, id, imageUrl }: ModuleCardTypes) {
   return (
     <Link
       href={`/modules/${id}`}
-      className="flex flex-col rounded-xl border-neutral-800 border bg-neutral-900 hover:bg-neutral-800 transition-colors duration-300 p-2 "
+      className="flex flex-col rounded-lg border-neutral-800 border bg-neutral-900 hover:bg-neutral-800 transition-colors duration-300 p-2 "
     >
-      <div className="cursor-pointer rounded-xl overflow-hidden h-40 w-40">
+      <div className="cursor-pointer rounded-lg overflow-hidden h-40 w-40">
         {imageUrl ? (
           <img
             src={imageUrl}

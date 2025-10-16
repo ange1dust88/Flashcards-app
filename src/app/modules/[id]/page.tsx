@@ -8,6 +8,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import AuthorCard from "@/components/ui/author-card";
+import { getUserByUid } from "@/app/firebase/users";
 
 interface ModulePageProps {
   params: { id: string };
@@ -17,10 +18,12 @@ export default async function ModulePage(props: ModulePageProps) {
 
   const module = await getModuleById(id);
 
+  const user = await getUserByUid(module?.authorUid!);
+
   if (!module) {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex justify-center items-center">
-        <p className="text-neutral-400 text-lg">Module not found 😢</p>
+        <p className="text-neutral-400 text-lg">Module not found</p>
       </div>
     );
   }
@@ -48,7 +51,10 @@ export default async function ModulePage(props: ModulePageProps) {
           </div>
 
           {/* author info */}
-          <AuthorCard username={module.author.username} />
+          <AuthorCard
+            username={module.authorUsername || user?.username || ""}
+            image={user?.photoURL}
+          />
         </div>
 
         <Carousel className="w-full h-full flex flex-col justify-center mt-8">

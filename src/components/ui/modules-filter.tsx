@@ -39,7 +39,7 @@ export default function ModulesFilter({
             <ModuleCard
               key={mod.id}
               title={mod.title}
-              author={mod.author.username}
+              author={mod.authorUsername}
               imageUrl={mod.imageUrl ?? ""}
               length={mod.wordList.length}
               id={mod.id}

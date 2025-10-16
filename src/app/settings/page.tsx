@@ -25,7 +25,6 @@ function Settings() {
   const [uploadingBannerPhoto, setUploadingBannerPhoto] =
     useState<boolean>(false);
   const router = useRouter();
-  console.log(user);
 
   const [newProfilePicture, setNewProfilePicture] = useState<string>("");
   const [newProfileBanner, setNewProfileBanner] = useState<string>("");

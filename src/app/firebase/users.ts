@@ -7,6 +7,7 @@ import {
   where,
   getDocs,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -33,6 +34,24 @@ export async function createUser(
     createdAt: serverTimestamp(),
   });
   console.log("User created in Firestore:", uid);
+}
+
+export async function getUserByUid(uid: string): Promise<User | null> {
+  try {
+    const userRef = doc(db, "users", uid);
+    const snapshot = await getDoc(userRef);
+
+    if (!snapshot.exists()) {
+      console.log("No user found with UID:", uid);
+      return null;
+    }
+
+    const userData = snapshot.data() as User;
+    return userData;
+  } catch (error) {
+    console.error("Error fetching user by UID:", error);
+    return null;
+  }
 }
 
 export async function getUserByUsername(

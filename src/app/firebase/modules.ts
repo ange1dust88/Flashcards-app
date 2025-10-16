@@ -9,7 +9,6 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "./config";
-import { User } from "./users";
 
 interface WordItem {
   term: string;
@@ -23,7 +22,8 @@ export interface Module {
   description: string;
   imageUrl?: string;
   wordList: WordItem[];
-  author: User;
+  authorUsername: string | null | undefined;
+  authorUid: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -33,7 +33,8 @@ export async function createModule(
   title: string,
   description: string,
   wordList: WordItem[],
-  author: User,
+  authorUsername: string,
+  authorUid: string,
   imageUrl?: string
 ): Promise<void> {
   const cleanedWordList = wordList.map((word) => ({
@@ -47,7 +48,8 @@ export async function createModule(
     description,
     imageUrl: imageUrl ?? "",
     wordList: cleanedWordList,
-    author,
+    authorUsername,
+    authorUid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -70,7 +72,8 @@ export async function getAllModules(): Promise<Module[]> {
         description: data.description,
         imageUrl: data.imageUrl ?? "",
         wordList: data.wordList ?? [],
-        author: data.author,
+        authorUsername: data.authorUsername,
+        authorUid: data.authorUid,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       } as Module;
@@ -101,7 +104,8 @@ export async function getModuleById(moduleId: string): Promise<Module | null> {
       description: data.description,
       imageUrl: data.imageUrl ?? "",
       wordList: data.wordList ?? [],
-      author: data.author,
+      authorUsername: data.authorUsername,
+      authorUid: data.authorUid,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     };
@@ -118,7 +122,7 @@ export async function getModulesByUsername(
 ): Promise<Module[]> {
   try {
     const modulesRef = collection(db, "modules");
-    const q = query(modulesRef, where("author.username", "==", username));
+    const q = query(modulesRef, where("authorUsername", "==", username));
     const snapshot = await getDocs(q);
 
     const modules: Module[] = snapshot.docs.map((doc) => {
@@ -129,7 +133,8 @@ export async function getModulesByUsername(
         description: data.description,
         imageUrl: data.imageUrl ?? "",
         wordList: data.wordList ?? [],
-        author: data.author,
+        authorUsername: data.authorUsername,
+        authorUid: data.authorUid,
         createdAt: data.createdAt,
         updatedAt: data.updatedAt,
       } as Module;
