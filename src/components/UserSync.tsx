@@ -8,7 +8,6 @@ import { getUserByUid } from "@/app/firebase/users";
 
 export default function UserSync() {
   const [user] = useAuthState(auth);
-  console.log(user);
   const { setUser, clearUser } = useUserStore();
 
   useEffect(() => {
@@ -22,6 +21,7 @@ export default function UserSync() {
         const usr = await getUserByUid(user.uid);
         if (usr) {
           setUser({
+            uid: user.uid,
             email: usr.email,
             username: usr.username,
             photoURL: usr.photoURL,

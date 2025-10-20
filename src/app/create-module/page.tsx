@@ -85,6 +85,15 @@ function CreateModule() {
     console.log("Module created:", { title, description, cards });
   };
 
+  const removeCard = (index: number) => {
+    if (cards.length <= 1) {
+      alert("You must have at least one card.");
+      return;
+    }
+
+    setCards((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="flex h-screen justify-center items-start mt-16">
       <div className="bg-neutral-950 container">
@@ -177,6 +186,7 @@ function CreateModule() {
               definition={card.definition}
               imageUrl={card.imageUrl}
               onChange={(field, value) => handleCardChange(i, field, value)}
+              onDelete={() => removeCard(i)}
             />
           ))}
         </div>

@@ -7,6 +7,7 @@ import {
   query,
   where,
   getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -144,5 +145,47 @@ export async function getModulesByUsername(
   } catch (error) {
     console.error("Error fetching modules by username:", error);
     return [];
+  }
+}
+
+export async function updateModuleHeader(
+  moduleId: string,
+  data: {
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+  }
+): Promise<void> {
+  try {
+    const moduleRef = doc(db, "modules", moduleId);
+
+    await updateDoc(moduleRef, {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log("Module header updated:", moduleId);
+  } catch (error) {
+    console.error("Error updating module header:", error);
+    throw error;
+  }
+}
+
+export async function updateModuleWordList(
+  moduleId: string,
+  wordList: WordItem[]
+): Promise<void> {
+  try {
+    const moduleRef = doc(db, "modules", moduleId);
+
+    await updateDoc(moduleRef, {
+      wordList,
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log("Word list updated:", moduleId);
+  } catch (error) {
+    console.error("Error updating word list:", error);
+    throw error;
   }
 }
