@@ -54,6 +54,7 @@ export const useUserStore = create<UserState & UserActions>()(
 
       clearUser: () =>
         set({
+          uid: null,
           email: null,
           username: null,
           photoURL: null,

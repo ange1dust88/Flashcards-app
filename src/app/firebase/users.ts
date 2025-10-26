@@ -12,6 +12,7 @@ import {
 import { db } from "./config";
 
 export interface User {
+  uid: string;
   email: string;
   username: string;
   photoURL: string | null;
@@ -27,6 +28,7 @@ export async function createUser(
   bannerURL?: string
 ): Promise<void> {
   await setDoc(doc(db, "users", uid), {
+    uid: uid,
     email,
     username,
     photoURL: photoURL || null,

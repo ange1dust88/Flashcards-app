@@ -9,6 +9,7 @@ import { Spinner } from "./spinner";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
 import { updateModuleHeader } from "@/app/firebase/modules"; // новая функция
+import { addFavourite } from "@/app/firebase/favorites";
 
 interface ModuleHeaderTypes {
   title: string;
@@ -70,6 +71,17 @@ export default function ModuleHeader({
       alert("Failed to update module header");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const addToFavourites = async () => {
+    if (!uid) return;
+    if (!moduleId) return;
+    try {
+      await addFavourite(uid, moduleId);
+    } catch (err) {
+      console.error("Failed to add module to favourites:", err);
+      alert("Failed to add module to favourites");
     }
   };
 
@@ -158,7 +170,7 @@ export default function ModuleHeader({
               Edit
             </Button>
           ) : (
-            <Button variant="dark">
+            <Button onClick={addToFavourites} variant="dark">
               <svg
                 stroke="currentColor"
                 fill="currentColor"

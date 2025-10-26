@@ -21,11 +21,12 @@ import { useUserStore } from "@/store/userStore";
 function Header() {
   const router = useRouter();
   const [user] = useAuthState(auth);
-  const { username, photoURL } = useUserStore();
+  const { username, photoURL, clearUser } = useUserStore();
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      clearUser();
       //router.push("/sign-in");
     } catch (err) {
       console.error("Logout error:", err);

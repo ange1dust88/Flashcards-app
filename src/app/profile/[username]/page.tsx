@@ -4,6 +4,7 @@ import { getModulesByUsername } from "@/app/firebase/modules";
 import { notFound } from "next/navigation";
 import ModulesFilter from "@/components/ui/modules-filter";
 import { serializeFirestoreData } from "@/lib/serialize";
+import { getFavouritesByUser } from "@/app/firebase/favorites";
 
 interface UserPageProps {
   params: Promise<{ username: string }>;
@@ -11,14 +12,28 @@ interface UserPageProps {
 export default async function UserProfile({ params }: UserPageProps) {
   const { username } = await params;
 
+  console.log("🔍 Searching for user with username:", username);
+
+  // 1. Сначала получаем пользователя
   const user = await getUserByUsername(username);
+
   if (!user) {
+    console.log("❌ User not found");
     notFound();
   }
 
-  const createdModules = await getModulesByUsername(username);
-  const savedModules = await getModulesByUsername(username);
+  console.log("✅ User found:", user);
 
+  // 2. Параллельно загружаем созданные модули и избранные
+  const [createdModules, savedModules] = await Promise.all([
+    getModulesByUsername(username),
+    getFavouritesByUser(user.uid), // Теперь user.uid доступен
+  ]);
+
+  console.log("📊 Results:", {
+    created: createdModules.length,
+    saved: savedModules.length,
+  });
   return (
     <div className="flex justify-center items-start mt-8 min-h-screen">
       <div className="container ">

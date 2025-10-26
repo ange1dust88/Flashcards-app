@@ -37,11 +37,10 @@ export default function RootLayout({
   );
 }
 
-// show modules in user's profile
-// update profile
-// update module
-
-// like another modules and save to lib
+// like another modules and save to lib DONE
+// Add AI
+// learning modes
+// polish
 
 // header reloading fix
 // learning modes
