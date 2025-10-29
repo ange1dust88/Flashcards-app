@@ -5,6 +5,7 @@ import UserSync from "@/components/UserSync";
 
 async function Dashboard() {
   const modules = await getAllModules();
+
   return (
     <div className="flex h-screen justify-center items-start">
       <div className="container mt-16">

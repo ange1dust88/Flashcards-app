@@ -28,7 +28,7 @@ function LearningCard({ term, definition, imageUrl }: LearningCardTypes) {
 
         {/* BACK SIDE */}
         <div
-          className={`absolute inset-0 bg-neutral-800 text-white rounded-xl border border-neutral-700 shadow-lg p-4 [transform:rotateY(180deg)] [backface-visibility:hidden] grid ${
+          className={`whitespace-pre-wrap absolute inset-0 bg-neutral-800 text-white rounded-xl border border-neutral-700 shadow-lg p-4 [transform:rotateY(180deg)] [backface-visibility:hidden] grid ${
             imageUrl ? "grid-cols-2" : "grid-cols-1"
           }`}
         >

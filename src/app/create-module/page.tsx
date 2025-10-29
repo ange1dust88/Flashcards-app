@@ -11,12 +11,8 @@ import { auth } from "@/app/firebase/config";
 import { useUserStore } from "@/store/userStore";
 import { uploadToCloudinary } from "../firebase/uploadToCloudinary";
 import { Spinner } from "@/components/ui/spinner";
-
-interface CardData {
-  term: string;
-  definition: string;
-  imageUrl?: string;
-}
+import AIfeatures from "@/components/ui/AIfeatures";
+import { CardData } from "../AI/parseAIResponse";
 
 function CreateModule() {
   const [user] = useAuthState(auth);
@@ -92,6 +88,10 @@ function CreateModule() {
     }
 
     setCards((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeEmptyCards = () => {
+    setCards((prev) => prev.filter((card) => card.term.trim() !== ""));
   };
 
   return (
@@ -175,6 +175,24 @@ function CreateModule() {
             />
           </div>
         </div>
+
+        {/* AI features 
+        
+          
+  const result = await fetchChatGPTResponse([
+    { role: "system", content: "You are a helpful assistant." },
+    { role: "user", content: "Сгенерируй краткое описание модуля" },
+  ]);
+
+  console.log("✅ ChatGPT response:", result);
+
+
+        */}
+        <AIfeatures
+          wordsList={cards.map((c) => c.term).filter(Boolean)}
+          removeEmptyCards={removeEmptyCards}
+          onGeneratedCards={(newCards) => setCards(newCards)}
+        />
 
         {/* Flashcards */}
         <div className="mt-8 flex flex-col gap-4">
