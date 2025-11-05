@@ -176,18 +176,6 @@ function CreateModule() {
           </div>
         </div>
 
-        {/* AI features 
-        
-          
-  const result = await fetchChatGPTResponse([
-    { role: "system", content: "You are a helpful assistant." },
-    { role: "user", content: "Сгенерируй краткое описание модуля" },
-  ]);
-
-  console.log("✅ ChatGPT response:", result);
-
-
-        */}
         <AIfeatures
           wordsList={cards.map((c) => c.term).filter(Boolean)}
           removeEmptyCards={removeEmptyCards}

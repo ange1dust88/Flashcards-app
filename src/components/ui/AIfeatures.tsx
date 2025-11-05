@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogClose,
@@ -14,15 +14,9 @@ import {
 import { Button } from "./button";
 import { Label } from "./label";
 import ComboBox from "@/components/ui/ComboBox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { fetchChatGPTResponse } from "@/app/AI/config";
 import { CardData, parseAIResponseToCards } from "@/app/AI/parseAIResponse";
+import { Spinner } from "./spinner";
 
 interface AIfeaturesTypes {
   wordsList: string[];
@@ -61,7 +55,7 @@ const examplesCount = [
 ];
 
 const exampleTemplate = `
-mindset, a person's way of thinking (мышление) 
+mindset, a person's way of thinking (мышление)
 She adopted a positive _______ to overcome the challenges she faced at work.
 Changing his _______ from a fixed to a growth perspective helped him become more successful.
 The team's _______ was focused on collaboration and achieving their common goals.;
@@ -72,153 +66,214 @@ function AIfeatures({
   removeEmptyCards,
   onGeneratedCards,
 }: AIfeaturesTypes) {
-  const [level, setLevel] = React.useState("");
-  const [language, setLanguage] = React.useState("");
-  const [translationLang, setTranslationLang] = React.useState("");
-  const [style, setStyle] = React.useState("");
-  const [examples, setExamples] = React.useState("3");
+  const [level, setLevel] = useState("");
+  const [language, setLanguage] = useState("");
+  const [translationLang, setTranslationLang] = useState("");
+  const [style, setStyle] = useState("");
+  const [examples, setExamples] = useState("3");
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isFormValid = Boolean(
+    language && translationLang && level && style && examples
+  );
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      setErrors({});
+    }
+  }, [isDialogOpen]);
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!language) newErrors.language = "Please select target language";
+    if (!translationLang)
+      newErrors.translationLang = "Please select translation language";
+    if (!level) newErrors.level = "Please select level";
+    if (!style) newErrors.style = "Please select style";
+    if (!examples) newErrors.examples = "Please select examples count";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const GenerateDefinitions = async () => {
-    const terms = wordsList.filter((t) => t.trim() !== "");
     removeEmptyCards();
+    const terms = wordsList.filter((t) => t.trim() !== "");
 
     if (!terms.length) {
-      console.warn("⚠️ No terms provided!");
+      alert("Please add at least one word to generate cards.");
+      return;
     }
+
+    if (!validate()) return;
+
+    setIsLoading(true);
+
     const prompt = `
-        Take the terms below and for each term add:
-        - Definition in ${language}
-        - Translation into ${translationLang}
-        - ${examples} example${
+      Take the terms below and for each term add:
+      - Definition in ${language}
+      - Translation into ${translationLang}
+      - ${examples} example${
       examples !== "1" ? "s" : ""
     } in ${language} (do NOT translate these examples)
-        Definition should correspond to ${level.toUpperCase()} level.
-        Style: ${style}.
-        Separate each card AFTER EXAMPLES by a semicolon.
-        Follow this format:
-        ${exampleTemplate}
+      Definition should correspond to ${level.toUpperCase()} level.
+      Style: ${style}.
+      Separate each card AFTER EXAMPLES by a semicolon.
+      Follow this format:
+      ${exampleTemplate}
 
-        Here is the list:
-        ${terms.join(", ")}`;
+      Here is the list:
+      ${terms.join(", ")}
+    `;
 
-    console.log(prompt);
+    try {
+      const result = await fetchChatGPTResponse([
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: prompt },
+      ]);
 
-    const result = await fetchChatGPTResponse([
-      { role: "system", content: "You are a helpful assistant." },
-      { role: "user", content: prompt },
-    ]);
-
-    console.log(result);
-    const newCards = parseAIResponseToCards(result);
-
-    // Передаем результат обратно в родителя
-    onGeneratedCards(newCards);
+      const newCards = parseAIResponseToCards(result);
+      onGeneratedCards(newCards);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("AI generation error:", error);
+      alert("Something went wrong while generating. Try again later.");
+    } finally {
+      setIsLoading(false);
+      setLevel("");
+      setLanguage("");
+      setTranslationLang("");
+      setStyle("");
+      setExamples("");
+    }
   };
 
   return (
     <div className="mt-8">
-      <div className="flex gap-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant={"dark"}>
-              <svg
-                stroke="currentColor"
-                fill="currentColor"
-                strokeWidth="0"
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 640 640"
-              >
-                <path d="M272 112C272 85.5 293.5 64 320 64C346.5 64 368 85.5 368 112C368 138.5 346.5 160 320 160C293.5 160 272 138.5 272 112zM224 256C224 238.3 238.3 224 256 224L320 224C337.7 224 352 238.3 352 256L352 512L384 512C401.7 512 416 526.3 416 544C416 561.7 401.7 576 384 576L256 576C238.3 576 224 561.7 224 544C224 526.3 238.3 512 256 512L288 512L288 288L256 288C238.3 288 224 273.7 224 256z" />
-              </svg>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className=" text-sm">
-            <DropdownMenuLabel>Profile picture guidelines</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <ul className="space-y-1 text-neutral-300 p-2">
-              <li>• Avoid nudity, violence, or hate symbols</li>
-              <li>• Recommended size: 150x150px for best quality</li>
-              <li>• Square or centered images work best</li>
-            </ul>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Dialog>
-          <div>
-            <DialogTrigger asChild>
-              <Button variant="outline">AI Fill Settings</Button>
-            </DialogTrigger>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setErrors({});
+        }}
+      >
+        <DialogTrigger asChild>
+          <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+            AI Fill Settings
+          </Button>
+        </DialogTrigger>
 
-            <DialogContent className="w-[450px]">
-              <DialogHeader>
-                <DialogTitle>AI Generation Settings</DialogTitle>
-                <DialogDescription>
-                  Configure how AI should generate your flashcards
-                </DialogDescription>
-              </DialogHeader>
+        <DialogContent className="w-[450px]">
+          <DialogHeader>
+            <DialogTitle>AI Generation Settings</DialogTitle>
+            <DialogDescription>
+              Configure how AI should generate your flashcards
+            </DialogDescription>
+          </DialogHeader>
 
-              <div className="grid gap-5 py-2">
-                <div className="grid gap-2">
-                  <Label>Target language</Label>
-                  <ComboBox
-                    options={languages}
-                    placeholder="Select target language..."
-                    searchPlaceholder="Search language..."
-                    onChange={(val) => setLanguage(val)}
-                  />
-                </div>
+          <div className="grid gap-5 py-2">
+            {/* Language */}
+            <div className="grid gap-2">
+              <Label>Target language</Label>
+              <ComboBox
+                options={languages}
+                placeholder="Select target language..."
+                onChange={(val) => {
+                  setLanguage(val);
+                  setErrors((e) => ({ ...e, language: "" }));
+                }}
+              />
+              {errors.language && (
+                <span className="text-red-500 text-sm">{errors.language}</span>
+              )}
+            </div>
 
-                <div className="grid gap-2">
-                  <Label>Translation language</Label>
-                  <ComboBox
-                    options={languages}
-                    placeholder="Select translation language..."
-                    searchPlaceholder="Search language..."
-                    onChange={(val) => setTranslationLang(val)}
-                  />
-                </div>
+            {/* Translation */}
+            <div className="grid gap-2">
+              <Label>Translation language</Label>
+              <ComboBox
+                options={languages}
+                placeholder="Select translation language..."
+                onChange={(val) => {
+                  setTranslationLang(val);
+                  setErrors((e) => ({ ...e, translationLang: "" }));
+                }}
+              />
+              {errors.translationLang && (
+                <span className="text-red-500 text-sm">
+                  {errors.translationLang}
+                </span>
+              )}
+            </div>
 
-                <div className="grid gap-2">
-                  <Label>Level</Label>
-                  <ComboBox
-                    options={levels}
-                    placeholder="Select level..."
-                    searchPlaceholder="Search level..."
-                    onChange={(val) => setLevel(val)}
-                  />
-                </div>
+            {/* Level */}
+            <div className="grid gap-2">
+              <Label>Level</Label>
+              <ComboBox
+                options={levels}
+                placeholder="Select level..."
+                onChange={(val) => {
+                  setLevel(val);
+                  setErrors((e) => ({ ...e, level: "" }));
+                }}
+              />
+              {errors.level && (
+                <span className="text-red-500 text-sm">{errors.level}</span>
+              )}
+            </div>
 
-                <div className="grid gap-2">
-                  <Label>Examples per card</Label>
-                  <ComboBox
-                    options={examplesCount}
-                    placeholder="Select examples count..."
-                    searchPlaceholder="Search count..."
-                    onChange={(val) => setExamples(val)}
-                  />
-                </div>
+            {/* Examples */}
+            <div className="grid gap-2">
+              <Label>Examples per card</Label>
+              <ComboBox
+                options={examplesCount}
+                placeholder="Select examples count..."
+                onChange={(val) => {
+                  setExamples(val);
+                  setErrors((e) => ({ ...e, examples: "" }));
+                }}
+              />
+              {errors.examples && (
+                <span className="text-red-500 text-sm">{errors.examples}</span>
+              )}
+            </div>
 
-                <div className="grid gap-2">
-                  <Label>Style</Label>
-                  <ComboBox
-                    options={styles}
-                    placeholder="Select style..."
-                    searchPlaceholder="Search style..."
-                    onChange={(val) => setStyle(val)}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button onClick={GenerateDefinitions}>Generate</Button>
-              </DialogFooter>
-            </DialogContent>
+            {/* Style */}
+            <div className="grid gap-2">
+              <Label>Style</Label>
+              <ComboBox
+                options={styles}
+                placeholder="Select style..."
+                onChange={(val) => {
+                  setStyle(val);
+                  setErrors((e) => ({ ...e, style: "" }));
+                }}
+              />
+              {errors.style && (
+                <span className="text-red-500 text-sm">{errors.style}</span>
+              )}
+            </div>
           </div>
-        </Dialog>
-      </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={isLoading}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={GenerateDefinitions}
+              disabled={isLoading || !isFormValid}
+              className="min-w-[100px]"
+            >
+              {isLoading ? <Spinner className="w-4 h-4" /> : "Generate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
