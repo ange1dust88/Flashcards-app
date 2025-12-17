@@ -7,7 +7,7 @@ async function Dashboard() {
   const modules = await getAllModules();
 
   return (
-    <div className="flex h-screen justify-center items-start">
+    <div className="flex min-h-[calc(100vh-4.1rem)] justify-center items-start">
       <div className="container mt-16">
         <div className="flex gap-6 w-full">
           {modules.map((mod) => (

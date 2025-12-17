@@ -13,8 +13,6 @@ export default async function UserProfile({ params }: UserPageProps) {
   const { username } = await params;
 
   console.log("🔍 Searching for user with username:", username);
-
-  // 1. Сначала получаем пользователя
   const user = await getUserByUsername(username);
 
   if (!user) {
@@ -24,10 +22,9 @@ export default async function UserProfile({ params }: UserPageProps) {
 
   console.log("✅ User found:", user);
 
-  // 2. Параллельно загружаем созданные модули и избранные
   const [createdModules, savedModules] = await Promise.all([
     getModulesByUsername(username),
-    getFavouritesByUser(user.uid), // Теперь user.uid доступен
+    getFavouritesByUser(user.uid),
   ]);
 
   console.log("📊 Results:", {
@@ -35,7 +32,7 @@ export default async function UserProfile({ params }: UserPageProps) {
     saved: savedModules.length,
   });
   return (
-    <div className="flex justify-center items-start mt-8 min-h-screen">
+    <div className="flex justify-center items-start mt-8 h-[calc(100vh-6.1rem)]">
       <div className="container ">
         <div className="grid grid-cols-[2fr_4fr] gap-2">
           {/* LEFT */}

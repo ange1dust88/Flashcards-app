@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Module } from "@/app/firebase/modules";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface DefinitionTestProps {
   params: Promise<{ id: string }>;
@@ -19,8 +20,11 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
   const [answer, setAnswer] = useState("");
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
-
+  const [finished, setFinished] = useState(false);
   const [id, setId] = useState<string | null>(null);
+
+  const router = useRouter();
+
   useEffect(() => {
     params.then(({ id }) => setId(id));
   }, [params]);
@@ -47,7 +51,7 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cards.length) return;
+    if (!cards.length || finished) return;
 
     const current = cards[index];
     const userAnswer = answer.trim().toLowerCase();
@@ -58,16 +62,28 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
     setIsCorrect(correct);
     if (correct) {
       toast("Correct!");
-    } else if (!correct) {
+      setScore((s) => s + 1);
+    } else {
       toast(`Wrong! Correct answer: ${current.term}`);
     }
-    if (correct) setScore((s) => s + 1);
 
     setTimeout(() => {
       setIsCorrect(null);
       setAnswer("");
-      setIndex((i) => (i + 1) % cards.length);
-    }, 1000);
+      if (index + 1 >= cards.length) {
+        setFinished(true);
+      } else {
+        setIndex((i) => i + 1);
+      }
+    }, 800);
+  };
+
+  const handleRestart = () => {
+    setIndex(0);
+    setScore(0);
+    setAnswer("");
+    setIsCorrect(null);
+    setFinished(false);
   };
 
   if (loading) {
@@ -86,13 +102,36 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
     );
   }
 
+  if (finished) {
+    const percentage = Math.round((score / cards.length) * 100);
+    return (
+      <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex flex-col justify-center items-center">
+        <h1 className="text-4xl font-bold mb-4">Test Finished!</h1>
+        <p className="text-lg text-gray-300 mb-4">
+          Your score: {score} / {cards.length} ({percentage}%)
+        </p>
+        <div className="flex gap-4 mt-4">
+          <Button onClick={handleRestart}>Restart</Button>
+          <Button
+            onClick={() => {
+              if (!id) return;
+              router.push(`/modules/${id}`);
+            }}
+          >
+            Go back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const current = cards[index];
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white flex justify-center items-center py-12">
+    <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex justify-center items-center py-12">
       <div className="container">
         <div className="flex flex-col gap-2 p-8 border border-neutral-800 bg-neutral-900 rounded-lg py-16">
-          <div className="grid grid-cols-[1fr_1fr]">
+          <div className="grid grid-cols-[1fr_1fr] gap-4">
             <div>
               <p className="whitespace-pre-wrap text-lg font-medium">
                 {current.definition}
@@ -101,7 +140,7 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
 
             <form
               onSubmit={handleSubmit}
-              className=" flex flex-col justify-center w-full gap-2"
+              className="flex flex-col justify-center w-full gap-2"
             >
               <Input
                 placeholder="Type the correct term..."
@@ -115,21 +154,11 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
             </form>
           </div>
 
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex justify-between items-center gap-4 mt-4">
             <div className="text-gray-400 text-sm">
               {index + 1} / {cards.length} | Score: {score}
             </div>
-
-            <Button
-              onClick={() => {
-                setIndex(0);
-                setScore(0);
-                setAnswer("");
-                setIsCorrect(null);
-              }}
-            >
-              Restart
-            </Button>
+            <Button onClick={handleRestart}>Restart</Button>
           </div>
         </div>
       </div>
