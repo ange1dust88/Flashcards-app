@@ -59,8 +59,8 @@ export default async function ModulePage(props: ModulePageProps) {
           <TestModeButton moduleId={id} link={"simple-definition-test"}>
             Multiple choice test
           </TestModeButton>
-          <TestModeButton moduleId={id} link={"pairs"}>
-            Pairs
+          <TestModeButton moduleId={id} link={"match"}>
+            Match
           </TestModeButton>
         </Card>
 
