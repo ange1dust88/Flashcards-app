@@ -10,6 +10,8 @@ import {
 import AuthorCard from "@/components/ui/author-card";
 import { getUserByUid } from "@/app/firebase/users";
 import ModuleHeader from "@/components/ui/module-header";
+import { Card } from "@/components/ui/card";
+import TestModeButton from "@/components/ui/test-mode-button";
 
 interface ModulePageProps {
   params: { id: string };
@@ -50,7 +52,19 @@ export default async function ModulePage(props: ModulePageProps) {
           />
         </div>
 
-        <Carousel className="w-full h-full flex flex-col justify-center mt-8">
+        <Card className="mt-8 grid grid-cols-[1fr_1fr_1fr] gap-4 p-4 min-h-32">
+          <TestModeButton moduleId={id} link={"definition-test"}>
+            Definition test
+          </TestModeButton>
+          <TestModeButton moduleId={id} link={"simple-definition-test"}>
+            Multiple choice test
+          </TestModeButton>
+          <TestModeButton moduleId={id} link={"pairs"}>
+            Pairs
+          </TestModeButton>
+        </Card>
+
+        <Carousel className="w-full h-full flex flex-col justify-center mt-8 pb-16">
           <CarouselContent>
             {module.wordList.map((word, i) => (
               <CarouselItem key={i} className="h-120">

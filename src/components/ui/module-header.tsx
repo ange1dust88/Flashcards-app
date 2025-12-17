@@ -8,7 +8,7 @@ import { uploadToCloudinary } from "@/app/firebase/uploadToCloudinary";
 import { Spinner } from "./spinner";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
-import { updateModuleHeader } from "@/app/firebase/modules"; // новая функция
+import { updateModuleHeader } from "@/app/firebase/modules";
 import { addFavourite } from "@/app/firebase/favorites";
 
 interface ModuleHeaderTypes {
