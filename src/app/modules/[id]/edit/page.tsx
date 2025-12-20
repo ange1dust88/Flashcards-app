@@ -101,7 +101,6 @@ export default function Edit({ params }: ModulePageProps) {
           onImageChange={setCoverImage}
         />
 
-        {/* Карточки */}
         <div className="flex flex-col gap-4">
           {cards.map((card, i) => (
             <CreateCard

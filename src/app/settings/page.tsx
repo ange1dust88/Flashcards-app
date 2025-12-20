@@ -13,8 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { uploadToCloudinary } from "../firebase/uploadToCloudinary";
 import { updateUserBanner, updateUserPhoto } from "../firebase/users";
+import { toast } from "sonner";
 
 function Settings() {
   const [user, loading] = useAuthState(auth);
@@ -46,9 +46,27 @@ function Settings() {
     );
   }
 
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text);
+    }
+
+    const data = await res.json();
+    return data.url;
+  };
+
   const updateProfilePicture = async () => {
     if (!newProfilePicture) {
-      alert("No photo uploaded");
+      toast("No photo uploaded");
       return;
     }
 
@@ -189,7 +207,7 @@ function Settings() {
                   if (!file) return;
                   setUploading(true);
                   try {
-                    const url = await uploadToCloudinary(file);
+                    const url = await uploadImage(file);
                     setNewProfilePicture(url);
                   } catch (err) {
                     console.error("Avatar upload failed:", err);
@@ -282,7 +300,7 @@ function Settings() {
                   if (!file) return;
                   setUploadingBanner(true);
                   try {
-                    const url = await uploadToCloudinary(file);
+                    const url = await uploadImage(file);
                     setNewProfileBanner(url);
                   } catch (err) {
                     console.error("Banner upload failed:", err);

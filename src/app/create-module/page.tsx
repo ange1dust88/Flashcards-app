@@ -1,21 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import CreateCard from "@/components/ui/create-card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useRef, useState } from "react";
-import { createModule } from "../firebase/modules";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/app/firebase/config";
 import { useUserStore } from "@/store/userStore";
-import { uploadToCloudinary } from "../firebase/uploadToCloudinary";
 import { Spinner } from "@/components/ui/spinner";
 import AIfeatures from "@/components/ui/AIfeatures";
 import { CardData } from "../AI/parseAIResponse";
+import { toast } from "sonner";
 
 function CreateModule() {
-  const [user] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const { username } = useUserStore();
   const [title, setTitle] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
@@ -28,6 +28,14 @@ function CreateModule() {
   const [coverImage, setCoverImage] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
 
   const handleCardChange = (
     index: number,
@@ -44,46 +52,54 @@ function CreateModule() {
   };
 
   const handleCreate = async () => {
-    let isError = false;
-
-    if (!title) {
+    let hasError = false;
+    if (!title.trim()) {
       setTitleError("Title can't be empty");
-      isError = true;
-    } else {
-      setTitleError("");
-    }
+      hasError = true;
+    } else setTitleError("");
 
-    if (!description) {
+    if (!description.trim()) {
       setDescriptionError("Description can't be empty");
-      isError = true;
-    } else {
-      setDescriptionError("");
+      hasError = true;
+    } else setDescriptionError("");
+
+    if (hasError) return;
+
+    try {
+      const res = await fetch("/api/modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          cards,
+          coverImage,
+          username,
+          uid: user?.uid,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast(data.error || "Failed to create module");
+        return;
+      }
+
+      setTitle("");
+      setDescription("");
+      setCards([{ term: "", definition: "", imageUrl: "" }]);
+      setCoverImage("");
+      toast("Module created successfully!");
+    } catch (err) {
+      console.error(err);
+      toast("Failed to create module");
     }
-
-    if (isError) return;
-
-    await createModule(
-      crypto.randomUUID(),
-      title,
-      description,
-      cards,
-      username || "",
-      user?.uid || "",
-      coverImage
-    );
-
-    setTitle("");
-    setDescription("");
-    setCards([{ term: "", definition: "", imageUrl: "" }]);
-    setCoverImage("");
-    //add notif
-    alert("Module created");
-    console.log("Module created:", { title, description, cards });
   };
 
   const removeCard = (index: number) => {
     if (cards.length <= 1) {
-      alert("You must have at least one card.");
+      toast("You must have at least one card.");
       return;
     }
 
@@ -135,7 +151,7 @@ function CreateModule() {
 
           {/* Cover image upload */}
           <div
-            className="relative rounded-lg border border-neutral-800 overflow-hidden bg-neutral-900 flex justify-center items-center p-2 aspect-square cursor-pointer relative group"
+            className="relative rounded-lg border border-neutral-800 overflow-hidden bg-neutral-900 flex justify-center items-center p-2 aspect-square cursor-pointer group"
             onClick={() => fileInputRef.current?.click()}
           >
             <img
@@ -161,13 +177,27 @@ function CreateModule() {
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
+
                 setUploading(true);
                 try {
-                  const url = await uploadToCloudinary(file);
-                  setCoverImage(url);
+                  const formData = new FormData();
+                  formData.append("file", file);
+
+                  const res = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                  });
+
+                  if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text);
+                  }
+
+                  const data = await res.json();
+                  setCoverImage(data.url);
                 } catch (err) {
                   console.error("Cover upload failed:", err);
-                  alert("Cover upload failed");
+                  toast("Cover upload failed");
                 } finally {
                   setUploading(false);
                 }
@@ -197,7 +227,7 @@ function CreateModule() {
           ))}
         </div>
 
-        <div className="text-center mt-10">
+        <div className="text-center my-10">
           <Button onClick={addCard}>Add a card</Button>
         </div>
       </div>

@@ -1,15 +1,50 @@
-import React from "react";
-import { getAllModules } from "../firebase/modules";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import ModuleCard from "@/components/ui/module-card";
 import UserSync from "@/components/UserSync";
 
-async function Dashboard() {
-  const modules = await getAllModules();
+interface Module {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  wordList: any[];
+  authorUsername: string | null | undefined;
+}
+
+export default function Dashboard() {
+  const [modules, setModules] = useState<Module[]>([]);
+  const [lastDocId, setLastDocId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const pageSize = 20;
+
+  const loadModules = async () => {
+    if (loading) return;
+    setLoading(true);
+
+    const url = `/api/modules?pageSize=${pageSize}${
+      lastDocId ? `&lastDocId=${lastDocId}` : ""
+    }`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    setModules((prev) => [...prev, ...data.modules]);
+    setLastDocId(data.lastDocId ?? null);
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadModules();
+  }, []);
 
   return (
     <div className="flex min-h-[calc(100vh-4.1rem)] justify-center items-start">
       <div className="container mt-16">
-        <div className="flex gap-6 w-full">
+        <div className="flex gap-6 w-full flex-wrap">
           {modules.map((mod) => (
             <ModuleCard
               key={mod.id}
@@ -21,10 +56,16 @@ async function Dashboard() {
             />
           ))}
         </div>
+        {lastDocId && (
+          <button
+            className="mt-4 px-4 py-2 bg-neutral-800 text-white rounded"
+            onClick={loadModules}
+          >
+            Load more
+          </button>
+        )}
       </div>
       <UserSync />
     </div>
   );
 }
-
-export default Dashboard;

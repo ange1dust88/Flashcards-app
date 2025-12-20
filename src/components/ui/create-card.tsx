@@ -1,8 +1,7 @@
 "use client";
 import React, { useRef, useState } from "react";
 import { Input } from "./input";
-import { uploadToCloudinary } from "@/app/firebase/uploadToCloudinary";
-import { Button } from "./button";
+import { toast } from "sonner";
 
 interface CreateCardProps {
   index: number;
@@ -25,17 +24,29 @@ function CreateCard({
   const [uploading, setUploading] = useState(false);
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log(file);
     if (!file) return;
 
     setUploading(true);
+
     try {
-      const url = await uploadToCloudinary(file);
-      onChange("imageUrl", url);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      const data = await res.json();
+      onChange("imageUrl", data.url);
     } catch (err) {
       console.error("Image upload failed:", err);
-      alert("Image upload failed");
-      //alert
+      toast("Image upload failed");
     } finally {
       setUploading(false);
     }

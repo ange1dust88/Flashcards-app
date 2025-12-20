@@ -4,13 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  useAuthState,
-  useCreateUserWithEmailAndPassword,
-} from "react-firebase-hooks/auth";
-import { auth } from "../firebase/config";
 import { Label } from "@/components/ui/label";
-import { createUser } from "../firebase/users";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase/config";
 
 export default function SignUp() {
   const [email, setEmail] = useState<string>("");
@@ -18,74 +14,75 @@ export default function SignUp() {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const router = useRouter();
-  const [user] = useAuthState(auth);
 
   const [emailError, setEmailError] = useState<string>("");
   const [usernameError, setUsernameError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
   const [confirmPasswordError, setConfirmPasswordError] = useState<string>("");
 
-  const [createUserWithEmailAndPassword] =
-    useCreateUserWithEmailAndPassword(auth);
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleSignUp = async () => {
     let hasError = false;
+    setEmailError("");
+    setUsernameError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
 
-    if (email === "") {
+    if (!email) {
       setEmailError("Email is necessary");
       hasError = true;
     } else if (!isValidEmail(email)) {
       setEmailError("Invalid email format");
       hasError = true;
-    } else {
-      setEmailError("");
     }
-    //add email taken
 
-    if (username === "") {
+    if (!username) {
       setUsernameError("Username is necessary");
-      hasError = true;
-    } else {
-      setUsernameError("");
-    }
-    //add username is taken
-
-    if (password !== confirmPassword) {
-      setConfirmPasswordError("Passwords do not match");
       hasError = true;
     }
 
     if (password.length < 8) {
       setPasswordError("Password should have at least 8 symbols");
       hasError = true;
-    } else {
-      setPasswordError("");
     }
 
-    if (hasError) {
-      return;
+    if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match");
+      hasError = true;
     }
+
+    if (hasError) return;
 
     try {
-      const res = await createUserWithEmailAndPassword(email, password);
-      if (!res || !res.user) return;
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username, password }),
+      });
 
-      await createUser(res.user.uid, res.user.email!, username);
+      const data = await res.json();
 
-      setEmail("");
-      setUsername("");
-      setPassword("");
-      setConfirmPassword("");
-      router.push("./dashboard");
+      if (!res.ok) {
+        if (data.error.includes("Username")) {
+          setUsernameError(data.error);
+        } else {
+          setEmailError(data.error);
+        }
+        return;
+      }
+
+      await signInWithEmailAndPassword(auth, email, password);
+
+      router.push("/dashboard");
     } catch (err) {
       console.error(err);
     }
   };
 
   return (
-    <div className="bg-neutral-950 flex justify-center items-center h-screen">
+    <div className="bg-neutral-950 flex justify-center items-center h-[calc(100vh-4.1rem)]">
       <Card className="bg-neutral-950 container w-full grid grid-cols-2 p-0 m-0 gap-0 box-border overflow-clip">
         <div className="flex justify-center items-center border-r py-12 border-neutral-800">
           <div className="space-y-4 max-w-80 w-full">
@@ -93,6 +90,7 @@ export default function SignUp() {
               Create account
             </h2>
 
+            {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">
                 Email <span className="text-red-500">*</span>
@@ -109,13 +107,12 @@ export default function SignUp() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              {emailError ? (
+              {emailError && (
                 <span className="text-red-500 text-sm">{emailError}</span>
-              ) : (
-                <></>
               )}
             </div>
 
+            {/* Username */}
             <div className="space-y-2">
               <Label htmlFor="username">
                 Display name <span className="text-red-500">*</span>
@@ -130,14 +127,12 @@ export default function SignUp() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
-
-              {usernameError ? (
+              {usernameError && (
                 <span className="text-red-500 text-sm">{usernameError}</span>
-              ) : (
-                <></>
               )}
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
               <Label htmlFor="password">
                 Password <span className="text-red-500">*</span>
@@ -149,14 +144,12 @@ export default function SignUp() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-
-              {passwordError ? (
+              {passwordError && (
                 <span className="text-red-500 text-sm">{passwordError}</span>
-              ) : (
-                <></>
               )}
             </div>
 
+            {/* Confirm Password */}
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">
                 Confirm password <span className="text-red-500">*</span>
@@ -168,12 +161,10 @@ export default function SignUp() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-              {confirmPasswordError ? (
+              {confirmPasswordError && (
                 <span className="text-red-500 text-sm">
                   {confirmPasswordError}
                 </span>
-              ) : (
-                <></>
               )}
             </div>
 

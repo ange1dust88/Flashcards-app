@@ -8,6 +8,11 @@ import {
   where,
   getDoc,
   updateDoc,
+  orderBy,
+  limit,
+  startAfter,
+  DocumentData,
+  QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -60,10 +65,32 @@ export async function createModule(
   console.log("Module created in Firestore:", moduleId);
 }
 
-export async function getAllModules(): Promise<Module[]> {
+export async function getAllModules(
+  pageSize: number,
+  lastDoc?: QueryDocumentSnapshot<DocumentData>
+): Promise<{
+  modules: Module[];
+  lastDoc: QueryDocumentSnapshot<DocumentData> | null;
+}> {
   try {
-    const modulesCollection = collection(db, "modules");
-    const snapshot = await getDocs(modulesCollection);
+    let q;
+
+    if (lastDoc) {
+      q = query(
+        collection(db, "modules"),
+        orderBy("createdAt", "desc"),
+        startAfter(lastDoc),
+        limit(pageSize)
+      );
+    } else {
+      q = query(
+        collection(db, "modules"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
+      );
+    }
+
+    const snapshot = await getDocs(q);
 
     const modules: Module[] = snapshot.docs.map((doc) => {
       const data = doc.data();
@@ -75,15 +102,18 @@ export async function getAllModules(): Promise<Module[]> {
         wordList: data.wordList ?? [],
         authorUsername: data.authorUsername,
         authorUid: data.authorUid,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
+        createdAt: data.createdAt?.toDate?.() ?? new Date(),
+        updatedAt: data.updatedAt?.toDate?.() ?? new Date(),
       } as Module;
     });
 
-    return modules;
+    const newLastDoc =
+      snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+
+    return { modules, lastDoc: newLastDoc };
   } catch (error) {
-    console.error("Error fetching modules:", error);
-    return [];
+    console.error("Error fetching paginated modules:", error);
+    return { modules: [], lastDoc: null };
   }
 }
 

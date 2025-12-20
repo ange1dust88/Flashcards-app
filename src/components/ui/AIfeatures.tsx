@@ -14,9 +14,9 @@ import {
 import { Button } from "./button";
 import { Label } from "./label";
 import ComboBox from "@/components/ui/ComboBox";
-import { fetchChatGPTResponse } from "@/app/AI/config";
 import { CardData, parseAIResponseToCards } from "@/app/AI/parseAIResponse";
 import { Spinner } from "./spinner";
+import { toast } from "sonner";
 
 interface AIfeaturesTypes {
   wordsList: string[];
@@ -104,7 +104,7 @@ function AIfeatures({
     const terms = wordsList.filter((t) => t.trim() !== "");
 
     if (!terms.length) {
-      alert("Please add at least one word to generate cards.");
+      toast("Please add at least one word to generate cards.");
       return;
     }
 
@@ -130,17 +130,22 @@ function AIfeatures({
     `;
 
     try {
-      const result = await fetchChatGPTResponse([
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: prompt },
-      ]);
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
 
-      const newCards = parseAIResponseToCards(result);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "AI request failed");
+
+      const newCards = parseAIResponseToCards(data.result);
       onGeneratedCards(newCards);
+
       setIsDialogOpen(false);
     } catch (error) {
       console.error("AI generation error:", error);
-      alert("Something went wrong while generating. Try again later.");
+      toast("Something went wrong while generating. Try again later.");
     } finally {
       setIsLoading(false);
       setLevel("");
