@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUserStore } from "@/store/userStore";
+import Search from "./Search";
 
 function Header() {
   const router = useRouter();
@@ -40,10 +41,7 @@ function Header() {
           <div>
             <h2 className="text-3xl font-extrabold">Logo</h2>
           </div>
-
-          <div className="flex justify-center items-center">
-            <Input placeholder="Search fo modules"></Input>
-          </div>
+          <Search />
         </div>
 
         <div className="flex justify-center gap-2">
