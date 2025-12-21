@@ -1,44 +1,44 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { getModuleById } from "@/app/firebase/modules";
+import { use, useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Module } from "@/app/firebase/modules";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Module } from "@/app/firebase/modules";
 
 interface DefinitionTestProps {
   params: Promise<{ id: string }>;
 }
 
+interface ModuleApiResponse {
+  module: Module;
+}
+
 export default function DefinitionTest({ params }: DefinitionTestProps) {
+  const { id } = use(params);
+
   const [moduleData, setModuleData] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [id, setId] = useState<string | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
-    params.then(({ id }) => setId(id));
-  }, [params]);
-
-  useEffect(() => {
-    if (!id) return;
-
     const fetchModule = async () => {
       try {
-        const data = await getModuleById(id);
-        if (!data) throw new Error("Module not found");
-        setModuleData(data);
+        const res = await fetch(`/api/modules/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch module");
+
+        const data: ModuleApiResponse = await res.json();
+        setModuleData(data.module);
       } catch (err) {
-        console.error("❌ Error fetching module:", err);
+        console.error("❌ Failed to fetch module:", err);
+        toast("Failed to load module");
       } finally {
         setLoading(false);
       }
@@ -48,18 +48,17 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
   }, [id]);
 
   const cards = moduleData?.wordList ?? [];
+  const current = cards[index];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cards.length || finished) return;
+    if (!current || finished) return;
 
-    const current = cards[index];
     const userAnswer = answer.trim().toLowerCase();
     const correct =
       current.term.toLowerCase() === userAnswer ||
       current.definition.toLowerCase().includes(userAnswer);
 
-    setIsCorrect(correct);
     if (correct) {
       toast("Correct!");
       setScore((s) => s + 1);
@@ -68,21 +67,19 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
     }
 
     setTimeout(() => {
-      setIsCorrect(null);
       setAnswer("");
       if (index + 1 >= cards.length) {
         setFinished(true);
       } else {
         setIndex((i) => i + 1);
       }
-    }, 800);
+    }, 700);
   };
 
   const handleRestart = () => {
     setIndex(0);
     setScore(0);
     setAnswer("");
-    setIsCorrect(null);
     setFinished(false);
   };
 
@@ -110,55 +107,37 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
         <p className="text-lg text-gray-300 mb-4">
           Your score: {score} / {cards.length} ({percentage}%)
         </p>
-        <div className="flex gap-4 mt-4">
+
+        <div className="flex gap-4">
           <Button onClick={handleRestart}>Restart</Button>
-          <Button
-            onClick={() => {
-              if (!id) return;
-              router.push(`/modules/${id}`);
-            }}
-          >
-            Go back
-          </Button>
+          <Button onClick={() => router.push(`/modules/${id}`)}>Go back</Button>
         </div>
       </div>
     );
   }
 
-  const current = cards[index];
-
   return (
     <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex justify-center items-center py-12">
-      <div className="container">
-        <div className="flex flex-col gap-2 p-8 border border-neutral-800 bg-neutral-900 rounded-lg py-16">
-          <div className="grid grid-cols-[1fr_1fr] gap-4">
-            <div>
-              <p className="whitespace-pre-wrap text-lg font-medium">
-                {current.definition}
-              </p>
-            </div>
+      <div className="container max-w-3xl">
+        <div className="flex flex-col gap-6 p-8 border border-neutral-800 bg-neutral-900 rounded-lg">
+          <p className="text-lg font-medium">{current.definition}</p>
 
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col justify-center w-full gap-2"
-            >
-              <Input
-                placeholder="Type the correct term..."
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                minLength={2}
-              />
-              <Button type="submit" className="w-full" variant="secondary">
-                Check
-              </Button>
-            </form>
-          </div>
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+              placeholder="Type the correct term..."
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+            />
+            <Button type="submit" variant="secondary">
+              Check
+            </Button>
+          </form>
 
-          <div className="flex justify-between items-center gap-4 mt-4">
-            <div className="text-gray-400 text-sm">
-              {index + 1} / {cards.length} | Score: {score}
-            </div>
-            <Button onClick={handleRestart}>Restart</Button>
+          <div className="flex justify-between text-sm text-gray-400">
+            <span>
+              {index + 1} / {cards.length}
+            </span>
+            <span>Score: {score}</span>
           </div>
         </div>
       </div>

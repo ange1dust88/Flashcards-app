@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateUserBanner, updateUserPhoto } from "../firebase/users";
 import { toast } from "sonner";
 
 function Settings() {
@@ -65,41 +64,52 @@ function Settings() {
   };
 
   const updateProfilePicture = async () => {
-    if (!newProfilePicture) {
+    if (!newProfilePicture || !user) {
       toast("No photo uploaded");
       return;
     }
 
     setUploadingPhoto(true);
     try {
-      if (user) {
-        await updateUserPhoto(user?.uid, newProfilePicture);
-      }
+      const res = await fetch("/api/users/photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, photoURL: newProfilePicture }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update photo");
+
       useUserStore.getState().setPhotoURL(newProfilePicture);
-      alert("Profile photo updated");
+      toast("Profile photo updated");
     } catch (err) {
       console.error(err);
-      alert("Failed to update photo");
+      toast("Failed to update photo");
     } finally {
       setUploadingPhoto(false);
     }
   };
 
   const updateBannerPicture = async () => {
-    if (!newProfileBanner) {
-      alert("No banner photo uploaded");
+    if (!newProfileBanner || !user) {
+      toast("No banner uploaded");
       return;
     }
+
     setUploadingBannerPhoto(true);
     try {
-      if (user) {
-        await updateUserBanner(user?.uid, newProfileBanner);
-      }
+      const res = await fetch("/api/users/banner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: user.uid, bannerURL: newProfileBanner }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update banner");
+
       useUserStore.getState().setBannerURL(newProfileBanner);
-      alert("Banner photo updated");
+      toast("Banner updated");
     } catch (err) {
       console.error(err);
-      alert("Failed to update banner photo");
+      toast("Failed to update banner");
     } finally {
       setUploadingBannerPhoto(false);
     }

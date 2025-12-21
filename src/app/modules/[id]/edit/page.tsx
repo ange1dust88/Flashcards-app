@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, use } from "react";
-import { getModuleById, updateModuleWordList } from "@/app/firebase/modules";
 import { Spinner } from "@/components/ui/spinner";
 import ModuleHeader from "@/components/ui/module-header";
 import CreateCard from "@/components/ui/create-card";
@@ -22,25 +21,37 @@ export default function Edit({ params }: ModulePageProps) {
 
   const [module, setModule] = useState<any>(null);
   const [cards, setCards] = useState<CardData[]>([]);
-  const [title, setTitle] = useState<any>("");
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [coverImage, setCoverImage] = useState<any>("");
+  const [coverImage, setCoverImage] = useState("");
   const [saving, setSaving] = useState(false);
 
+  /* ---------- FETCH MODULE ---------- */
   useEffect(() => {
     const fetchModule = async () => {
-      const data = await getModuleById(id);
-      if (data) {
-        setModule(data);
-        setCards(data.wordList || []);
-        setTitle(data.title);
-        setDescription(data.description);
-        setCoverImage(data.imageUrl);
+      try {
+        const res = await fetch(`/api/modules/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch module");
+
+        const data = await res.json();
+        const module = data.module;
+
+        if (!module) return;
+
+        setModule(module);
+        setCards(module.wordList || []);
+        setTitle(module.title || "");
+        setDescription(module.description || "");
+        setCoverImage(module.imageUrl || "");
+      } catch (err) {
+        console.error("Edit module fetch error:", err);
       }
     };
+
     fetchModule();
   }, [id]);
 
+  /* ---------- CARD EDITING ---------- */
   const handleCardChange = (
     index: number,
     field: "term" | "definition" | "imageUrl",
@@ -63,21 +74,41 @@ export default function Edit({ params }: ModulePageProps) {
     setCards((prev) => prev.filter((_, i) => i !== index));
   };
 
+  /* ---------- SAVE ---------- */
   const handleSaveCards = async () => {
     const validCards = cards.filter(
-      (c) => c.term.trim() !== "" && c.definition.trim() !== ""
+      (c) => c.term.trim() && c.definition.trim()
     );
 
-    if (validCards.length === 0) return alert("Add at least one valid card.");
+    if (!validCards.length) {
+      alert("Add at least one valid card.");
+      return;
+    }
 
     setSaving(true);
+
     try {
-      await updateModuleWordList(id, validCards);
-      setCards(validCards);
-      alert("Cards updated successfully!");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to update cards");
+      const res = await fetch(`/api/modules/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          wordList: validCards,
+          title,
+          description,
+          imageUrl: coverImage,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update module");
+      }
+
+      alert("Module updated successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update module");
     } finally {
       setSaving(false);
     }
@@ -87,21 +118,21 @@ export default function Edit({ params }: ModulePageProps) {
 
   return (
     <div className="flex justify-center items-start min-h-screen">
-      <div className="container mt-16 flex flex-col gap-6">
+      <div className="container mt-8 flex flex-col">
         <h1 className="text-2xl font-bold">Edit module</h1>
 
         <ModuleHeader
           title={title}
           description={description}
           imageUrl={coverImage}
-          isEdit={true}
+          isEdit
           moduleId={id}
           setTitle={setTitle}
           setDescription={setDescription}
           onImageChange={setCoverImage}
         />
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mt-4">
           {cards.map((card, i) => (
             <CreateCard
               key={i}

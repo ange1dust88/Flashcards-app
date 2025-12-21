@@ -4,12 +4,11 @@ import { useUserStore } from "@/store/userStore";
 import { Button } from "./button";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { uploadToCloudinary } from "@/app/firebase/uploadToCloudinary";
 import { Spinner } from "./spinner";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
-import { updateModuleHeader } from "@/app/firebase/modules";
 import { addFavourite } from "@/app/firebase/favorites";
+import { toast } from "sonner";
 
 interface ModuleHeaderTypes {
   title: string;
@@ -41,47 +40,79 @@ export default function ModuleHeader({
   const [uploading, setUploading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
 
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text);
+    }
+
+    const data = await res.json();
+    return data.url;
+  };
+
   const handleImageChange = async (file: File) => {
     setUploading(true);
     try {
-      const url = await uploadToCloudinary(file);
+      const url = await uploadImage(file);
       setNewPicture(url);
       onImageChange?.(url);
     } catch (err) {
       console.error("Picture upload failed:", err);
-      alert("Picture upload failed");
+      toast("Picture upload failed");
     } finally {
       setUploading(false);
     }
   };
 
   const handleSaveChanges = async () => {
-    console.log(moduleId);
     if (!moduleId) return;
     setSaving(true);
     try {
-      await updateModuleHeader(moduleId, {
-        title,
-        description,
-        imageUrl: newPicture,
+      await fetch(`/api/modules/${moduleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          imageUrl: newPicture,
+        }),
       });
-      alert("Module header updated!");
+      toast("Module header updated!");
     } catch (err) {
       console.error("Failed to update module header:", err);
-      alert("Failed to update module header");
+      toast("Failed to update module header");
     } finally {
       setSaving(false);
     }
   };
 
   const addToFavourites = async () => {
-    if (!uid) return;
-    if (!moduleId) return;
+    if (!uid || !moduleId) return;
+
     try {
-      await addFavourite(uid, moduleId);
+      const res = await fetch("/api/favourites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userUid: uid, moduleId }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      toast("Module added to favourites!");
     } catch (err) {
       console.error("Failed to add module to favourites:", err);
-      alert("Failed to add module to favourites");
+      toast("Failed to add module to favourites");
     }
   };
 

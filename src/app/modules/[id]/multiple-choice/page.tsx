@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { getModuleById } from "@/app/firebase/modules";
+
+import { useEffect, useState, use } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Module } from "@/app/firebase/modules";
@@ -12,6 +12,8 @@ interface MultipleChoiceProps {
 }
 
 export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
+  const { id } = use(params);
+
   const [moduleData, setModuleData] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
@@ -19,24 +21,20 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
   const [finished, setFinished] = useState(false);
   const [options, setOptions] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [id, setId] = useState<string | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
-    params.then(({ id }) => setId(id));
-  }, [params]);
-
-  useEffect(() => {
-    if (!id) return;
-
     const fetchModule = async () => {
       try {
-        const data = await getModuleById(id);
-        if (!data) throw new Error("Module not found");
-        setModuleData(data);
+        const res = await fetch(`/api/modules/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch module");
+
+        const data = await res.json();
+        setModuleData(data.module);
       } catch (err) {
         console.error(err);
+        toast("Failed to load module");
       } finally {
         setLoading(false);
       }
@@ -59,11 +57,10 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
       .slice(0, 3)
       .map((c) => c.term);
 
-    const shuffled = [correct, ...others].sort(() => Math.random() - 0.5);
+    setOptions([correct, ...others].sort(() => Math.random() - 0.5));
 
-    setOptions(shuffled);
     setSelected(null);
-  }, [index, finished, cards]);
+  }, [index, finished, cards, current]);
 
   const handleAnswer = (option: string) => {
     if (selected || finished) return;
@@ -131,10 +128,11 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
     <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex justify-center items-center py-12">
       <div className="container max-w-3xl">
         <div className="flex flex-col gap-6 p-8 border border-neutral-800 bg-neutral-900 rounded-lg">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-6">
             <p className="text-lg font-medium whitespace-pre-wrap">
               {current.definition}
             </p>
+
             {current.imageUrl && (
               <img
                 src={current.imageUrl}
@@ -158,9 +156,9 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
                   className={`justify-start !border-neutral-700 ${
                     selected &&
                     (isCorrect
-                      ? "!bg-green-800 !border-green-600 !text-white hover:!bg-green-600"
+                      ? "!bg-green-800 !border-green-600 !text-white"
                       : isSelected
-                      ? "!bg-red-800 !border-red-600 !text-white hover:!bg-red-600"
+                      ? "!bg-red-800 !border-red-600 !text-white"
                       : "")
                   }`}
                 >
@@ -170,7 +168,7 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
             })}
           </div>
 
-          <div className="flex justify-between items-center text-sm text-gray-400">
+          <div className="flex justify-between text-sm text-gray-400">
             <span>
               {index + 1} / {cards.length}
             </span>

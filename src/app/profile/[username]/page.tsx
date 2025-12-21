@@ -1,36 +1,38 @@
 import { Card } from "@/components/ui/card";
-import { getUserByUsername } from "@/app/firebase/users";
-import { getModulesByUsername } from "@/app/firebase/modules";
 import { notFound } from "next/navigation";
 import ModulesFilter from "@/components/ui/modules-filter";
 import { serializeFirestoreData } from "@/lib/serialize";
-import { getFavouritesByUser } from "@/app/firebase/favorites";
 
 interface UserPageProps {
-  params: Promise<{ username: string }>;
+  params: { username: string };
 }
+
 export default async function UserProfile({ params }: UserPageProps) {
-  const { username } = await params;
+  const { username } = params;
 
-  console.log("🔍 Searching for user with username:", username);
-  const user = await getUserByUsername(username);
+  const userRes = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/${username}`
+  );
+  const userData = await userRes.json();
 
-  if (!user) {
-    console.log("❌ User not found");
+  if (!userData.user) {
     notFound();
   }
 
-  console.log("✅ User found:", user);
+  const user = userData.user;
 
-  const [createdModules, savedModules] = await Promise.all([
-    getModulesByUsername(username),
-    getFavouritesByUser(user.uid),
-  ]);
+  const createdModulesRes = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/modules/user/${username}`
+  );
+  const createdModulesData = await createdModulesRes.json();
+  const createdModules = createdModulesData.modules || [];
 
-  console.log("📊 Results:", {
-    created: createdModules.length,
-    saved: savedModules.length,
-  });
+  const savedModuleRes = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/favourites/${user.uid}`
+  );
+  const savedModulesData = await savedModuleRes.json();
+  const savedModules = savedModulesData.modules || [];
+
   return (
     <div className="flex justify-center items-start mt-8 h-[calc(100vh-6.1rem)]">
       <div className="container ">
@@ -46,8 +48,8 @@ export default async function UserProfile({ params }: UserPageProps) {
               <p className="text-2xl font-semibold">{user.username}</p>
               <p className="text-neutral-400">
                 Registration date:{" "}
-                {user.createdAt?.toDate
-                  ? user.createdAt.toDate().toLocaleDateString()
+                {user.createdAt
+                  ? new Date(user.createdAt.seconds * 1000).toLocaleDateString()
                   : "Unknown"}
               </p>
             </Card>
