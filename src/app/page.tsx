@@ -1,60 +1,71 @@
-'use client'
+"use client";
 
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
+import ModuleCard from "@/components/ui/module-card";
+import UserSync from "@/components/UserSync";
 
-export default function Home() {
-  
-  const router = useRouter();
+interface Module {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  wordList: any[];
+  authorUsername: string | null | undefined;
+}
+
+export default function Dashboard() {
+  const [modules, setModules] = useState<Module[]>([]);
+  const [lastDocId, setLastDocId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const pageSize = 20;
+
+  const loadModules = async () => {
+    if (loading) return;
+    setLoading(true);
+
+    const url = `/api/modules?pageSize=${pageSize}${
+      lastDocId ? `&lastDocId=${lastDocId}` : ""
+    }`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    setModules((prev) => [...prev, ...data.modules]);
+    setLastDocId(data.lastDocId ?? null);
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadModules();
+  }, []);
+
   return (
-    <div className="h-full relative bg-neutral-950">
-   
-      <main className="flex justify-center flex-col items-center ">
-
-
-        {/* hero */}
-        <div className="container h-[80vh] flex justify-start items-center flex-col pt-24">
-          <h1 className="text-5xl font-bold">Study tools that teach, not tell</h1>
-          <p className="text-xl mt-6 mb-2 max-w-3xl text-center">Build confidence and master every subject with Quizlet’s interactive flashcards, personalized practice tests, and engaging study games.</p>
-          <div className="flex flex-col  gap-4 py-6">
-            <Button onClick={() => router.push('/sign-up')}>
-              <p className="px-4 py-2">
-                Sign up for free
-              </p>
-            </Button>
-            <Button>I'm a teacher</Button>
-          </div>
-
-          {/* hero cards */}
-          <div className="flex gap-4">
-            <Card>
-              <div className="min-w-md min-h-72 py-4 px-6">
-                FHFFH
-              </div>
-            </Card>
-            <Card>
-              <div className="min-w-md py-4 px-6">
-                FHFFH
-              </div>
-            </Card>
-            <Card>
-              <div className="min-w-md py-4 px-6">
-                FHFFH
-              </div>
-            </Card>
-          </div>
+    <div className="flex min-h-[calc(100vh-4.1rem)] justify-center items-start">
+      <div className="container mt-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full">
+          {modules.map((mod) => (
+            <ModuleCard
+              key={mod.id}
+              title={mod.title}
+              author={mod.authorUsername}
+              imageUrl={mod.imageUrl ?? ""}
+              length={mod.wordList.length}
+              id={mod.id}
+            />
+          ))}
         </div>
-
-        {/* info block */}
-        
-
-
-
-        
-
-
-      </main>
+        {lastDocId && (
+          <button
+            className="mt-4 px-4 py-2 bg-neutral-800 text-white rounded"
+            onClick={loadModules}
+          >
+            Load more
+          </button>
+        )}
+      </div>
+      <UserSync />
     </div>
   );
 }

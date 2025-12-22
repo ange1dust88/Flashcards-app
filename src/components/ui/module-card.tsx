@@ -14,27 +14,21 @@ function ModuleCard({ title, author, length, id, imageUrl }: ModuleCardTypes) {
   return (
     <Link
       href={`/modules/${id}`}
-      className="flex flex-col rounded-lg border-neutral-800 border bg-neutral-900 hover:bg-neutral-800 transition-colors duration-300 p-2 "
+      className="w-full flex flex-col rounded-lg border-neutral-800 border bg-neutral-900 hover:bg-neutral-800 transition-colors duration-300 p-2"
     >
-      <div className="cursor-pointer rounded-lg overflow-hidden h-40 w-40">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <img
-            src="/exampleImage.jpg"
-            alt={title}
-            className="h-full w-full object-cover"
-          />
-        )}
+      <div className="rounded-lg overflow-hidden h-40 w-full">
+        <img
+          src={imageUrl || "/exampleImage.jpg"}
+          alt={title}
+          className="h-full w-full object-cover"
+        />
       </div>
-      <div className="flex flex-col items-start">
-        <h4 className="pt-1 font-semibold">{title}</h4>
-        <p className="text-neutral-500 text-sm">{author}</p>
-        <span className="mt-4 text-sm bg-neutral-700 h-6 w-6 flex justify-center items-center rounded-[50%]">
+
+      <div className="flex flex-col items-start w-full">
+        <h4 className="pt-1 font-semibold truncate w-full">{title}</h4>
+        <p className="text-neutral-500 text-sm truncate w-full">{author}</p>
+
+        <span className="mt-2 text-sm bg-neutral-700 h-6 px-2 flex justify-center items-center rounded-full">
           {length}
         </span>
       </div>

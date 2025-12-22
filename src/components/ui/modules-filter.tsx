@@ -33,7 +33,7 @@ export default function ModulesFilter({
           Saved
         </Button>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
         {displayed.length > 0 ? (
           displayed.map((mod) => (
             <ModuleCard

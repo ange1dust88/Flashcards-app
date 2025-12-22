@@ -39,7 +39,7 @@ export default function SignIn() {
       setEmail("");
       setPassword("");
       if (res && res.user) {
-        router.push("/dashboard");
+        router.push("/");
       } else {
         setError("Invalid email or password");
       }

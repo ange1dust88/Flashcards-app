@@ -53,7 +53,7 @@ export default function Search() {
           )}
 
           {!loading && modules.length > 0 && (
-            <div className="flex flex-col gap-2 p-2 border border-neutral-800 rounded-lg bg-neutral-900">
+            <div className="flex flex-col gap-2 px-2 py-4 border border-neutral-800 rounded-lg bg-neutral-900">
               {modules.map((m) => (
                 <Link
                   key={m.id}

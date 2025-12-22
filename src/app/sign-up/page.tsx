@@ -75,7 +75,7 @@ export default function SignUp() {
 
       await signInWithEmailAndPassword(auth, email, password);
 
-      router.push("/dashboard");
+      router.push("/");
     } catch (err) {
       console.error(err);
     }

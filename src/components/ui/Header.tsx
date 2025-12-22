@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Input } from "./input";
 import { Button } from "./button";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUserStore } from "@/store/userStore";
 import Search from "./Search";
+import Link from "next/link";
 
 function Header() {
   const router = useRouter();
@@ -39,7 +39,9 @@ function Header() {
       <div className="flex justify-between items-center container mx-auto h-16 rounded-xl">
         <div className="flex items-center gap-8">
           <div>
-            <h2 className="text-3xl font-extrabold">Logo</h2>
+            <Link href="/" className="text-3xl font-extrabold">
+              Logo
+            </Link>
           </div>
           <Search />
         </div>
