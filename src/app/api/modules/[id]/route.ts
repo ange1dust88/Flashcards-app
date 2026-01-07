@@ -5,6 +5,8 @@ import {
   updateModuleWordList,
 } from "@/app/firebase/modules";
 import { getUserByUid } from "@/app/firebase/users";
+import { db } from "@/app/firebase/config";
+import { deleteDoc, doc } from "firebase/firestore";
 
 export async function GET(_: Request, context: { params: { id: string } }) {
   try {
@@ -67,6 +69,30 @@ export async function PUT(
     console.error("UPDATE MODULE API ERROR:", err);
     return NextResponse.json(
       { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    console.log("Delete module:", id);
+
+    const moduleRef = doc(db, "modules", id);
+    await deleteDoc(moduleRef);
+
+    console.log("Module deleted");
+
+    return NextResponse.json({ success: true, message: "Module deleted" });
+  } catch (err: any) {
+    console.error("Erorr:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to delete module" },
       { status: 500 }
     );
   }

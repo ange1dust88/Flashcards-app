@@ -16,7 +16,7 @@ function TestModeButton({ children, moduleId, link }: TestModeButtonProps) {
       onClick={() => router.push(`/modules/${moduleId}/${link}`)}
       className="flex justify-center items-center rounded-lg bg-neutral-800 border-neutral-800 border-1 w-full h-full cursor-pointer hover:bg-neutral-700 duration-100 ease-in"
     >
-      <span className="text-2xl">{children}</span>
+      <span className="text-lg">{children}</span>
     </div>
   );
 }

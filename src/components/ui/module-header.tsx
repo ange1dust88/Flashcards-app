@@ -49,6 +49,7 @@ export default function ModuleHeader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
+  const [deleting, setDeleting] = useState<boolean>(false);
 
   const uploadImage = async (file: File): Promise<string> => {
     const formData = new FormData();
@@ -75,8 +76,7 @@ export default function ModuleHeader({
       setNewPicture(url);
       onImageChange?.(url);
     } catch (err) {
-      console.error("Picture upload failed:", err);
-      toast("Picture upload failed");
+      toast.error("Picture upload failed");
     } finally {
       setUploading(false);
     }
@@ -86,7 +86,7 @@ export default function ModuleHeader({
     if (!moduleId) return;
     setSaving(true);
     try {
-      await fetch(`/api/modules/${moduleId}`, {
+      const res = await fetch(`/api/modules/${moduleId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -95,12 +95,45 @@ export default function ModuleHeader({
           imageUrl: newPicture,
         }),
       });
-      toast("Module header updated!");
-    } catch (err) {
-      console.error("Failed to update module header:", err);
-      toast("Failed to update module header");
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to update module");
+      }
+
+      toast.success("Module updated successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update module header");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteModule = async () => {
+    if (!moduleId) {
+      toast.error("Module ID is missing");
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/modules/${moduleId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete module");
+      }
+
+      toast.success("Module deleted successfully!");
+
+      router.push("/");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete module");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -119,10 +152,9 @@ export default function ModuleHeader({
         throw new Error(text);
       }
 
-      toast("Module added to favourites!");
+      toast.success("Module added to favourites!");
     } catch (err) {
-      console.error("Failed to add module to favourites:", err);
-      toast("Failed to add module to favourites");
+      toast.error("Failed to add module to favourites");
     }
   };
 
@@ -175,6 +207,7 @@ export default function ModuleHeader({
               value={title}
               onChange={(e) => setTitle?.(e.target.value)}
               placeholder="Module title..."
+              disabled={saving}
             />
             <Textarea
               className="resize-none h-full"
@@ -182,13 +215,22 @@ export default function ModuleHeader({
               maxLength={200}
               onChange={(e) => setDescription?.(e.target.value)}
               placeholder="Module description..."
+              disabled={saving}
             />
             <Button
               variant={"secondary"}
               onClick={handleSaveChanges}
               disabled={saving}
+              className="w-fit"
             >
-              {saving ? "Saving..." : "Save changes"}
+              {saving ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save changes"
+              )}
             </Button>
           </>
         ) : (
@@ -208,13 +250,14 @@ export default function ModuleHeader({
               <Button
                 onClick={() => router.push(`/modules/${moduleId}/edit`)}
                 variant="dark"
+                disabled={deleting}
               >
                 Edit
               </Button>
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button>Delete</Button>
+                  <Button disabled={deleting}>Delete</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -227,9 +270,21 @@ export default function ModuleHeader({
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => router.push(`/`)}>
-                      Continue
+                    <AlertDialogCancel disabled={deleting}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteModule}
+                      disabled={deleting}
+                    >
+                      {deleting ? (
+                        <>
+                          <Spinner className="mr-2" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete"
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

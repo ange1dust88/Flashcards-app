@@ -14,6 +14,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function Settings() {
   const [user, loading] = useAuthState(auth);
@@ -228,13 +239,33 @@ function Settings() {
                 }}
               />
               <div className="border-t border-neutral-800 p-6">
-                <Button
-                  onClick={updateProfilePicture}
-                  disabled={uploadingPhoto}
-                  className="min-w-[85px]"
-                >
-                  {uploadingPhoto ? <Spinner /> : "Upload"}
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button className="min-w-[85px]" disabled={uploadingPhoto}>
+                      {uploadingPhoto ? <Spinner /> : "Upload"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Change profile picture?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will update your profile picture for all users to
+                        see.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={updateProfilePicture}
+                        disabled={uploadingPhoto}
+                      >
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
 
@@ -321,13 +352,36 @@ function Settings() {
                 }}
               />
               <div className="border-t border-neutral-800 p-6">
-                <Button
-                  onClick={updateBannerPicture}
-                  disabled={uploadingBannerPhoto}
-                  className="min-w-[85px]"
-                >
-                  {uploadingBannerPhoto ? <Spinner /> : "Upload"}
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      className="min-w-[85px]"
+                      disabled={uploadingBannerPhoto}
+                    >
+                      {uploadingBannerPhoto ? <Spinner /> : "Upload"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Change profile banner?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will update your profile banner image for all users
+                        to see.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={updateBannerPicture}
+                        disabled={uploadingBannerPhoto}
+                      >
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
