@@ -35,7 +35,7 @@ export default function SignIn() {
 
     try {
       const res = await signInWithEmailAndPassword(email, password);
-      console.log(res);
+
       setEmail("");
       setPassword("");
       if (res && res.user) {
@@ -48,7 +48,7 @@ export default function SignIn() {
     }
   };
   return (
-    <div className="bg-neutral-950 flex justify-center items-center h-screen">
+    <div className="bg-neutral-950 flex justify-center items-center h-[calc(100vh-4rem)]">
       <Card className="bg-neutral-950 container w-full grid grid-cols-2 p-0 m-0 gap-0 box-border overflow-clip ">
         <div className="flex justify-center items-center border-r border-neutral-800">
           <div className="max-w-80 w-full">

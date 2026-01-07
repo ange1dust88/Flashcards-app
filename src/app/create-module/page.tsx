@@ -19,15 +19,23 @@ function CreateModule() {
   const { username } = useUserStore();
   const [title, setTitle] = useState<string>("");
   const [titleError, setTitleError] = useState<string>("");
+  const [showTitleError, setShowTitleError] = useState(false);
 
   const [description, setDescription] = useState<string>("");
   const [descriptionError, setDescriptionError] = useState<string>("");
+  const [showDescriptionError, setShowDescriptionError] = useState(false);
+
   const [cards, setCards] = useState<CardData[]>([
     { term: "", definition: "", imageUrl: "" },
   ]);
   const [coverImage, setCoverImage] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [showCardValidation, setShowCardValidation] = useState(false);
+  const [validationTimer, setValidationTimer] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [isCreating, setIsCreating] = useState(false);
 
   const router = useRouter();
 
@@ -35,7 +43,13 @@ function CreateModule() {
     if (!loading && !user) {
       router.push("/");
     }
-  }, [user, loading, router]);
+
+    return () => {
+      if (validationTimer) {
+        clearTimeout(validationTimer);
+      }
+    };
+  }, [user, loading, router, validationTimer]);
 
   const handleCardChange = (
     index: number,
@@ -51,20 +65,113 @@ function CreateModule() {
     setCards([...cards, { term: "", definition: "", imageUrl: "" }]);
   };
 
-  const handleCreate = async () => {
+  const showValidationFor10Seconds = () => {
+    if (validationTimer) {
+      clearTimeout(validationTimer);
+    }
+
+    setShowCardValidation(true);
+    setShowTitleError(true);
+    setShowDescriptionError(true);
+
+    const timer = setTimeout(() => {
+      setShowCardValidation(false);
+      setShowTitleError(false);
+      setShowDescriptionError(false);
+      setValidationTimer(null);
+    }, 3000);
+
+    setValidationTimer(timer);
+  };
+
+  const hideValidationForField = (field: "title" | "description") => {
+    if (field === "title" && title.trim()) {
+      setShowTitleError(false);
+      setTitleError("");
+    }
+    if (field === "description" && description.trim()) {
+      setShowDescriptionError(false);
+      setDescriptionError("");
+    }
+  };
+
+  const validateAllCards = (): boolean => {
+    if (cards.length < 6) {
+      toast.error("Module must have at least 6 cards");
+      return false;
+    }
+    const hasEmptyFields = cards.some(
+      (card) => card.term.trim() === "" || card.definition.trim() === ""
+    );
+
+    if (hasEmptyFields) {
+      toast.error("Please fill in all term and definition fields");
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateForm = (): boolean => {
     let hasError = false;
+    let shouldShowValidation = false;
+
     if (!title.trim()) {
       setTitleError("Title can't be empty");
       hasError = true;
-    } else setTitleError("");
+      shouldShowValidation = true;
+    } else {
+      setTitleError("");
+    }
 
     if (!description.trim()) {
       setDescriptionError("Description can't be empty");
       hasError = true;
-    } else setDescriptionError("");
+      shouldShowValidation = true;
+    } else {
+      setDescriptionError("");
+    }
 
-    if (hasError) return;
+    const cardsValid = validateAllCards();
+    if (!cardsValid) {
+      hasError = true;
+      shouldShowValidation = true;
+    }
 
+    if (shouldShowValidation) {
+      showValidationFor10Seconds();
+    }
+
+    if (hasError) {
+      setTimeout(() => {
+        const firstErrorElement = document.querySelector(".border-red-500");
+        if (firstErrorElement) {
+          firstErrorElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 0);
+      return false;
+    }
+
+    return true;
+  };
+
+  const createModule = async (redirectToPractice: boolean = false) => {
+    if (!validateForm()) {
+      return null;
+    }
+
+    setShowCardValidation(false);
+    setShowTitleError(false);
+    setShowDescriptionError(false);
+    if (validationTimer) {
+      clearTimeout(validationTimer);
+      setValidationTimer(null);
+    }
+
+    setIsCreating(true);
     try {
       const res = await fetch("/api/modules", {
         method: "POST",
@@ -82,24 +189,42 @@ function CreateModule() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast(data.error || "Failed to create module");
-        return;
+        toast.error(data.error || "Failed to create module");
+        return null;
       }
 
-      setTitle("");
-      setDescription("");
-      setCards([{ term: "", definition: "", imageUrl: "" }]);
-      setCoverImage("");
-      toast("Module created successfully!");
+      if (!redirectToPractice) {
+        setTitle("");
+        setDescription("");
+        setCards([{ term: "", definition: "", imageUrl: "" }]);
+        setCoverImage("");
+        toast.success("Module created successfully!");
+      }
+
+      return data.moduleId;
     } catch (err) {
       console.error(err);
-      toast("Failed to create module");
+      toast.error("Failed to create module");
+      return null;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    const moduleId = await createModule(false);
+  };
+
+  const handleCreateAndPractice = async () => {
+    const moduleId = await createModule(true);
+    if (moduleId) {
+      router.push(`/modules/${moduleId}`);
     }
   };
 
   const removeCard = (index: number) => {
     if (cards.length <= 1) {
-      toast("You must have at least one card.");
+      toast.warning("You must have at least one card.");
       return;
     }
 
@@ -110,49 +235,80 @@ function CreateModule() {
     setCards((prev) => prev.filter((card) => card.term.trim() !== ""));
   };
 
+  const filledCardsCount = cards.filter(
+    (card) => card.term.trim() !== "" && card.definition.trim() !== ""
+  ).length;
+
   return (
     <div className="flex h-screen justify-center items-start mt-16">
       <div className="bg-neutral-950 container">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-bold">Create a new flashcard set</h2>
+          <div>
+            <h2 className="text-xl font-bold">Create a new flashcard module</h2>
+            <p className="text-sm text-neutral-400 mt-1">
+              {filledCardsCount} of {cards.length} cards filled
+              {isCreating && <Spinner />}
+            </p>
+          </div>
           <div className="flex gap-2">
-            <Button variant={"secondary"} onClick={handleCreate}>
-              Create
+            <Button
+              variant={"secondary"}
+              onClick={handleCreate}
+              disabled={isCreating}
+            >
+              {isCreating ? "Creating..." : "Create"}
             </Button>
-            <Button>Create and practice</Button>
+            <Button onClick={handleCreateAndPractice} disabled={isCreating}>
+              {isCreating ? "Creating..." : "Create and practice"}
+            </Button>
           </div>
         </div>
 
         {/* Title & Description & cover image */}
         <div className="grid grid-cols-[minmax(0,5fr)_1fr] gap-8">
-          <div className=" flex flex-col gap-1">
-            <Input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
-            />
-            {titleError && (
-              <span className="text-red-500 text-sm">{titleError}</span>
-            )}
+          <div className="flex flex-col gap-1">
+            <div className="relative">
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  hideValidationForField("title");
+                }}
+                placeholder="Title"
+                disabled={isCreating}
+                className={`transition-colors duration-300 ${
+                  showTitleError && titleError
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : ""
+                }`}
+              />
+            </div>
 
-            <Textarea
-              placeholder="Add a description..."
-              className="resize-none h-full"
-              value={description}
-              maxLength={200}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            {descriptionError && (
-              <span className="text-red-500 text-sm">{descriptionError}</span>
-            )}
+            <div className="relative h-full">
+              <Textarea
+                placeholder="Add a description..."
+                className={`resize-none h-full transition-colors duration-300 ${
+                  showDescriptionError && descriptionError
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : ""
+                }`}
+                value={description}
+                maxLength={200}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  hideValidationForField("description");
+                }}
+                disabled={isCreating}
+              />
+            </div>
           </div>
 
           {/* Cover image upload */}
           <div
             className="relative rounded-lg border border-neutral-800 overflow-hidden bg-neutral-900 flex justify-center items-center p-2 aspect-square cursor-pointer group"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !isCreating && fileInputRef.current?.click()}
           >
             <img
               src={coverImage || "/exampleImage.jpg"}
@@ -174,9 +330,10 @@ function CreateModule() {
               accept="image/*"
               className="hidden"
               ref={fileInputRef}
+              disabled={isCreating}
               onChange={async (e) => {
                 const file = e.target.files?.[0];
-                if (!file) return;
+                if (!file || isCreating) return;
 
                 setUploading(true);
                 try {
@@ -197,7 +354,7 @@ function CreateModule() {
                   setCoverImage(data.url);
                 } catch (err) {
                   console.error("Cover upload failed:", err);
-                  toast("Cover upload failed");
+                  toast.error("Cover upload failed");
                 } finally {
                   setUploading(false);
                 }
@@ -222,7 +379,8 @@ function CreateModule() {
               definition={card.definition}
               imageUrl={card.imageUrl}
               onChange={(field, value) => handleCardChange(i, field, value)}
-              onDelete={() => removeCard(i)}
+              onDelete={() => !isCreating && removeCard(i)}
+              showValidation={showCardValidation}
             />
           ))}
         </div>

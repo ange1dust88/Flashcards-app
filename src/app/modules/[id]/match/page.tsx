@@ -171,7 +171,7 @@ export default function Match({ params }: MatchProps) {
 
   if (finished) {
     return (
-      <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex flex-col justify-center items-center">
+      <div className="h-[calc(100vh-4rem)] bg-neutral-950 text-white flex flex-col justify-center items-center">
         <h1 className="text-4xl font-bold mb-4">Congratulations!</h1>
         <p className="text-lg text-gray-300">
           You completed all matches in {Math.floor(time / 60)}:

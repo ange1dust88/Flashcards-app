@@ -7,8 +7,18 @@ import { useRef, useState } from "react";
 import { Spinner } from "./spinner";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
-import { addFavourite } from "@/app/firebase/favorites";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ModuleHeaderTypes {
   title: string;
@@ -194,12 +204,37 @@ export default function ModuleHeader({
       {!isEdit && (
         <div className="absolute bottom-4 right-4">
           {uid === authorUid ? (
-            <Button
-              onClick={() => router.push(`/modules/${moduleId}/edit`)}
-              variant="dark"
-            >
-              Edit
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => router.push(`/modules/${moduleId}/edit`)}
+                variant="dark"
+              >
+                Edit
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button>Delete</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your module and remove data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => router.push(`/`)}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           ) : (
             <Button onClick={addToFavourites} variant="dark">
               <svg

@@ -110,7 +110,7 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
   if (finished) {
     const percentage = Math.round((score / cards.length) * 100);
     return (
-      <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex flex-col justify-center items-center">
+      <div className="h-[calc(100vh-4rem)] bg-neutral-950 text-white flex flex-col justify-center items-center">
         <h1 className="text-4xl font-bold mb-4">Test Finished!</h1>
         <p className="text-lg text-gray-300 mb-4">
           Your score: {score} / {cards.length} ({percentage}%)
@@ -125,7 +125,7 @@ export default function MultipleChoiceTest({ params }: MultipleChoiceProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-4.1rem)] bg-neutral-950 text-white flex justify-center items-center py-12">
+    <div className="h-[calc(100vh-4rem)] bg-neutral-950 text-white flex justify-center items-center py-12">
       <div className="container max-w-3xl">
         <div className="flex flex-col gap-6 p-8 border border-neutral-800 bg-neutral-900 rounded-lg">
           <div className="flex justify-between items-center gap-6">

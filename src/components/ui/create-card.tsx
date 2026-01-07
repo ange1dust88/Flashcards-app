@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Input } from "./input";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ interface CreateCardProps {
   imageUrl?: string;
   onChange: (field: "term" | "definition" | "imageUrl", value: string) => void;
   onDelete: () => void;
+  showValidation?: boolean;
 }
 
 function CreateCard({
@@ -19,9 +20,27 @@ function CreateCard({
   imageUrl,
   onChange,
   onDelete,
+  showValidation = false,
 }: CreateCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+
+  useEffect(() => {
+    if (showValidation) {
+      setIsValidating(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsValidating(false);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [showValidation]);
+
+  const isTermEmpty = term.trim() === "";
+  const isDefinitionEmpty = definition.trim() === "";
+  const hasError = isTermEmpty || isDefinitionEmpty;
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -46,14 +65,26 @@ function CreateCard({
       onChange("imageUrl", data.url);
     } catch (err) {
       console.error("Image upload failed:", err);
-      toast("Image upload failed");
+      toast.error("Image upload failed");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div className="bg-neutral-900 rounded flex flex-col px-4 py-2 border border-neutral-800 pb-6">
+    <div
+      className={`bg-neutral-900 rounded flex flex-col px-4 py-2 border ${
+        isValidating && hasError
+          ? "border-red-500/50 transition-colors duration-300"
+          : "border-neutral-800"
+      } pb-6 relative`}
+    >
+      {isValidating && hasError && (
+        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+          !
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <span>{index}</span>
@@ -77,16 +108,31 @@ function CreateCard({
 
       {/* Inputs */}
       <div className="grid grid-cols-[3fr_3fr_1fr] gap-8">
-        <Input
-          placeholder="Enter term"
-          value={term}
-          onChange={(e) => onChange("term", e.target.value)}
-        />
-        <Input
-          placeholder="Enter definition"
-          value={definition}
-          onChange={(e) => onChange("definition", e.target.value)}
-        />
+        <div className="relative">
+          <Input
+            placeholder="Enter term"
+            value={term}
+            onChange={(e) => onChange("term", e.target.value)}
+            className={`transition-colors duration-300 ${
+              isValidating && isTermEmpty
+                ? "border-red-500 focus-visible:ring-red-500"
+                : ""
+            }`}
+          />
+        </div>
+
+        <div className="relative">
+          <Input
+            placeholder="Enter definition"
+            value={definition}
+            onChange={(e) => onChange("definition", e.target.value)}
+            className={`transition-colors duration-300 ${
+              isValidating && isDefinitionEmpty
+                ? "border-red-500 focus-visible:ring-red-500"
+                : ""
+            }`}
+          />
+        </div>
 
         {/* Image button */}
         <div className="flex justify-end items-center">
@@ -98,7 +144,7 @@ function CreateCard({
               <img
                 src={imageUrl}
                 alt="Uploaded"
-                className=" object-cover rounded-md border border-neutral-800 group-hover:opacity-75 transition-opacity"
+                className="object-cover rounded-md border border-neutral-800 group-hover:opacity-75 transition-opacity"
               />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/50 rounded-md transition-opacity">
                 <span className="text-sm text-white">Change</span>
@@ -145,8 +191,12 @@ function CreateCard({
 
       {/* Labels */}
       <div className="grid grid-cols-[3fr_3fr_1fr] gap-8 text-neutral-400 text-sm mt-1">
-        <span>TERM</span>
-        <span>DEFINITION</span>
+        <div className="flex items-center gap-1">
+          <span>TERM</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span>DEFINITION</span>
+        </div>
       </div>
     </div>
   );

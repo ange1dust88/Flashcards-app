@@ -35,7 +35,7 @@ function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-neutral-800 backdrop-blur bg-neutral-950\10">
+    <header className="sticky top-0 z-40 h-16 w-full border-b border-neutral-800 backdrop-blur bg-neutral-950\10">
       <div className="flex justify-between items-center container mx-auto h-16 rounded-xl">
         <div className="flex items-center gap-8">
           <div>
@@ -47,7 +47,11 @@ function Header() {
         </div>
 
         <div className="flex justify-center gap-2">
-          <Button variant="outline" className="mr-4">
+          <Button
+            onClick={() => router.push("/contact-us")}
+            variant="outline"
+            className="mr-4 bg-red-200"
+          >
             <svg
               stroke="currentColor"
               fill="currentColor"

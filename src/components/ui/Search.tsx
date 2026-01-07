@@ -41,7 +41,7 @@ export default function Search() {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="h-8"
+        className="h-8 "
       />
 
       {focused && (

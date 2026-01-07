@@ -31,7 +31,14 @@ export default function Dashboard() {
     const res = await fetch(url);
     const data = await res.json();
 
-    setModules((prev) => [...prev, ...data.modules]);
+    const allModulesMap = new Map<string, Module>();
+
+    modules.forEach((mod) => allModulesMap.set(mod.id, mod));
+    data.modules.forEach((mod: Module) => allModulesMap.set(mod.id, mod));
+
+    const uniqueModules = Array.from(allModulesMap.values());
+
+    setModules(uniqueModules);
     setLastDocId(data.lastDocId ?? null);
 
     setLoading(false);
@@ -42,9 +49,9 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex min-h-[calc(100vh-4.1rem)] justify-center items-start">
+    <div className="flex min-h-[calc(100vh-4rem)] justify-center items-start">
       <div className="container mt-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 w-full pb-16 ">
           {modules.map((mod) => (
             <ModuleCard
               key={mod.id}
