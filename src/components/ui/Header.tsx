@@ -40,7 +40,7 @@ function Header() {
         <div className="flex items-center gap-8">
           <div>
             <Link href="/" className="text-3xl font-extrabold">
-              Logo
+              Recall
             </Link>
           </div>
           <Search />

@@ -40,6 +40,7 @@ const getModuleData = async (id: string) => {
 export default async function ModulePage({ params }: ModulePageProps) {
   const { id } = params;
   const data = await getModuleData(id);
+  console.log(data);
 
   if (!data || !data.module) {
     return (
@@ -49,7 +50,7 @@ export default async function ModulePage({ params }: ModulePageProps) {
     );
   }
 
-  const { module, user } = data;
+  const { module, author } = data;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-neutral text-white flex justify-center items-start">
@@ -64,9 +65,10 @@ export default async function ModulePage({ params }: ModulePageProps) {
           />
 
           <AuthorCard
-            username={module.authorUsername || user?.username || ""}
-            image={user?.photoURL}
+            username={author?.username || ""}
+            image={author?.photoURL}
           />
+
           <Card className="mt-8 flex flex-col gap-4 p-4 min-h-32">
             <TestModeButton moduleId={module.id} link={"definition-test"}>
               <div className="flex gap-1 items-center">

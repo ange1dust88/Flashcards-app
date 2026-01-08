@@ -120,9 +120,16 @@ export default function DefinitionTest({ params }: DefinitionTestProps) {
     <div className="h-[calc(100vh-4rem)] bg-neutral-950 text-white flex justify-center items-center py-12">
       <div className="container max-w-3xl">
         <div className="flex flex-col gap-6 p-8 border border-neutral-800 bg-neutral-900 rounded-lg">
-          <p className="text-lg font-medium whitespace-pre-wrap">
-            {current.definition}
-          </p>
+          <div className="flex justify-between items-start">
+            <p className="text-lg font-medium whitespace-pre-wrap">
+              {current.definition}
+            </p>
+            {current?.imageUrl ? (
+              <img src={current?.imageUrl} alt="" className="rounded-lg h-48" />
+            ) : (
+              <></>
+            )}
+          </div>
 
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input

@@ -212,7 +212,7 @@ function CreateModule() {
   };
 
   const handleCreate = async () => {
-    const moduleId = await createModule(false);
+    await createModule(false);
   };
 
   const handleCreateAndPractice = async () => {

@@ -236,9 +236,7 @@ export default function ModuleHeader({
         ) : (
           <>
             <h1 className="text-3xl font-semibold">{title}</h1>
-            <p className="text-neutral-400 break-words break-all">
-              {description}
-            </p>
+            <p className="text-neutral-400 break-words">{description}</p>
           </>
         )}
       </div>
